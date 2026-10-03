@@ -1,0 +1,11 @@
+# Entorno virtual
+venv/
+
+# Archivos temporales de Pythin
+__pycache__/
+*.pyc
+
+# Editor y Sistema
+.vscode/
+.DS_Store
+Thumbs.db
