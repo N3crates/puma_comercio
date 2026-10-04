@@ -13,7 +13,7 @@ COSTO_DEMORA_DIA = 150          # USD por cada dia de demora
 # Catalogos basicos
 ROLES = ["Ejecutivo de trafico", "Agente aduanal", "Gerencia / Finanzas", "Administrador"]
 ESTATUS = ["En origen", "En transito", "En puerto", "liberado", "Entregado en CD"]
-PUERTOS = ["manzanillo", "lazaro cardenas"]
+PUERTOS = ["Manzanillo", "Lazaro Cardenas"]
 
 # Usuarios
 USUARIOS = [
@@ -89,7 +89,7 @@ EMBARQUES = [
     # EMB-001: todo coincide, ya liberado -> validacion exitosa
     {
         "id": "EMB-001", "contenedor": "MSKU7345129", "origen": "Ho Chi Minh Vietnam", 
-        "puerto_destino": "manzanillo", "naviera": "maerks", "fecha_salida": "2026-08-20",
+        "puerto_destino": "Manzanillo", "naviera": "maerks", "fecha_salida": "2026-08-20",
         "eta": "2026-09-27", "fecha_arribo": "2026-09-27", "estatus": "liberado", 
         "flete": 4200.00, "honorarios": 650.00,
         "skus": [
@@ -102,7 +102,7 @@ EMBARQUES = [
     # EMB-002: un SKU no viene en la factura (factura = 0) -> faltante
     {
         "id": "EMB-002", "contenedor": "TGHU4821067", "origen": "Shangai, China",
-        "puerto_destino": "lazaro cardenas", "naviera": "MSC", "fecha_salida": "2026-09-10",
+        "puerto_destino": "Lazaro Cardenas", "naviera": "MSC", "fecha_salida": "2026-09-10",
         "eta": "2026-10-10", "fecha_arribo": None, "estatus": "En transito",
         "flete": 3800.00, "honorarios": 600.00,
         "skus": [
@@ -115,7 +115,7 @@ EMBARQUES = [
     # EMB-003: Cantidad facturada distinta -> excedente
     {
         "id": "EMB-003", "contenedor": "CMAU6109354", "origen": "yakarta, indonesa",
-        "puerto_destino": "manzanillo", "naviera": "Hapag-Lloyd", "fecha_salida": "2026-10-05",
+        "puerto_destino": "Manzanillo", "naviera": "Hapag-Lloyd", "fecha_salida": "2026-10-05",
         "eta": "2026-11-10", "fecha_arribo": None, "estatus": "En origen", "flete": 3500.00,
         "honorarios": 580.00,
         "skus": [
@@ -127,7 +127,7 @@ EMBARQUES = [
     # EMB-004: en puerto con muchos dias -> alerta de demora
     {
         "id": "EMB-004", "contenedor": "HLXU3392841", "origen": "Ningbo, china",
-        "puerto_destino": "lazaro cardenas", "naviera": "COSCO", "fecha_salida": "2026-08-25",
+        "puerto_destino": "Lazaro Cardenas", "naviera": "COSCO", "fecha_salida": "2026-08-25",
         "eta": "2026-09-22", "fecha_arribo": "2026-09-22", "estatus": "En puerto",
         "flete": 5100.00, "honorarios": 720.00,
         "skus": [
@@ -140,7 +140,7 @@ EMBARQUES = [
     # EMB-005: en transito y a tiempo -> rastreo normal
     {
         "id": "EMB-005", "contenedor": "OOLU8204713", "origen": "ho chi minh, vietnam",
-        "puerto_destino": "manzanillo", "naviera": "maersk", "fecha_salida": "2026-09-15",
+        "puerto_destino": "Manzanillo", "naviera": "maersk", "fecha_salida": "2026-09-15",
         "eta": "2026-10-20", "fecha_arribo": None, "estatus": "En transito", "flete": 4000.00,
         "honorarios": 630.00,
         "skus": [

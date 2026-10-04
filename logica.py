@@ -42,7 +42,7 @@ def validar_embarque(id_embarque):
         elif diferencia < 0:
             estado = "Faltante"
         else:
-            estado = "Excelente"
+            estado = "Excedente"
 
         if estado != "Coincide":
             discrepancias += 1
@@ -60,7 +60,7 @@ def validar_embarque(id_embarque):
 
 def _fecha_valida(texto):
     try:
-        datetime.strptime(texto, "%y-%m-%d")
+        datetime.strptime(texto, "%Y-%m-%d")
         return True
     except (ValueError, TypeError):
         return False
@@ -79,9 +79,9 @@ def validar_datos_embarque(nuevo):
     campos = [("contenedor", "El contenedor"), ("origen", "El origen"),
               ("puerto_destino", "El puerto de destino"), ("naviera", "La naviera")]
 
-    for clave, nombre, in campos:
+    for clave, nombre in campos:
         if not str(nuevo.get(clave, "")).strip():
-            errores.append(nombre + "es obligatorio.")
+            errores.append(nombre + " es obligatorio.")
 
     # Contenedor repetido (sin distinguir mayusculas)
     contenedor = str(nuevo.get("contenedor", "")).strip().upper()
@@ -106,10 +106,10 @@ def validar_datos_embarque(nuevo):
         errores.append("El ETA debe ser posterior a la fecha de salida.")
 
     # flete y honorarios
-    if _numero_no_negativo(nuevo.get("false")) is None:
+    if _numero_no_negativo(nuevo.get("flete")) is None:
         errores.append("El flete debe de ser un numero mayor o igaul a 0.")
     if _numero_no_negativo(nuevo.get("honorarios")) is None:
-        errores.append("Los honorarios deben de ser un numero mayor o igaul a 0.")
+        errores.append("Los honorarios deben de ser un numero mayor o igual a 0.")
 
     # SKUs
     skus = nuevo.get("skus")

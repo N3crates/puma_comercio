@@ -129,3 +129,19 @@ th { background: var(--negro); color: var(--blanco); }
 .estado-coincide { color: var(--verde); }
 .estado-faltante { color: var(--rojo); }
 .estado-excedente { color: var(--amarillo); }
+
+/* ---------- Formulario de registro ---------- */
+.panel-ancho { max-width: 100%; }
+.rejilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0 20px;
+}
+.fila-sku {
+    display: grid;
+    grid-template-columns: 3fr 1fr 1fr auto;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: center;
+}
+.acciones { margin-top: 24px; display: flex; gap: 12px; }
