@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión | PUMA</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css')}}">
+</head>
+<body class="pagina-login">
+    <div class="tarjeta-login">
+        <h1>PUMA</h1>
+        <p class="subtitulo">Gestión de Comercio Internacional</p>
+        <div id="mensajes"></div>
+        <form id="form-login">
+            <label for="usuario">Usuario</label>
+            <input type="text" id="usuario" autocomplete="username" autofocus>
+            <label for="password">Contraseña</label>
+            <input type="password" id="password" autocomplete="current-password">
+            <button type="submit" class="boton boton-principal boton-ancho">Entrar</button>
+        </form>
+    </div>
+    <script src="{{ url_for('static', filename='js/comun.js')}}"></script>
+    <script>
+        document.getElementById("form-login").addEventListener("submit", async function (evento) {
+            evento.preventDefault()
+
+            const usuario = document.getElementById("usuario").value
+            const password = document.getElementById("password").value
+
+            if(usuario.trim() === "" || password === ""){
+                mostrarMensaje("error", "Escribe tu usuario y tu contraseña.")
+                return
+            }
+
+            const resultado = await enviarJSON("/api/login", "POST", {usuario: usuario, password: password})
+
+            if(resultado.datos.ok){
+                window.location.href = resultado.datos.redirigir
+            }else{
+                mostrarMensaje("error", resultado.datos.mensajes)
+            }
+            
+        })
+    </script>
+</body>
+</html>
