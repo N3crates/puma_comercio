@@ -156,3 +156,68 @@ def registrar_embarque(nuevo):
     }
     datos.EMBARQUES.append(embarque)
     return embarque, []
+
+# Costeo
+def _producto(sku):
+    for p in datos.CATALOGO:
+        if p["sku"] == sku:
+            return p
+    return None
+
+def calcular_costeo(id_embarque):
+    embarque = buscar_embarque(id_embarque)
+    if embarque is None:
+        return None
+
+    items = []
+    for item in embarque["skus"]:
+        if item["factura"] > 0:
+            producto = _producto(item["sku"])
+            valor_origen = producto["precio_origen"] * item["factura"]
+            items.append((item, producto, valor_origen))
+
+    total_origen = sum(i[2] for i in items)
+    filas = []
+    total_aterrizado = 0.0
+
+    for item, producto, valor_origen in items:
+        proporcion = valor_origen / total_origen if total_origen > 0 else 0
+        flete = embarque["flete"] * proporcion
+        honorarios = embarque["honorarios"] * proporcion
+        valor_aduana = valor_origen + flete
+
+        fraccion = datos.FRACCIONES[producto["fraccion_clave"]]
+        igi = valor_aduana * fraccion["igi"]
+        dta = valor_aduana * datos.DTA
+        iva = (valor_aduana + igi + dta) * datos.IVA
+
+        aterrizado = valor_origen + flete + honorarios + igi + dta
+        por_pieza = aterrizado / item["factura"]
+        total_aterrizado += aterrizado
+
+        filas.append({
+            "sku": item["sku"],
+            "cantidad": item["factura"],
+            "fraccion": fraccion["fraccion"],
+            "tasa_igi": fraccion["igi"],
+            "valor_origen": round(valor_origen, 2),
+            "flete": round(flete, 2),
+            "honorarios": round(honorarios, 2),
+            "igi": round(igi, 2),
+            "dta": round(dta, 2),
+            "iva": round(iva, 2),
+            "aterrizado": round(aterrizado, 2),
+            "por_pieza_usd": round(por_pieza, 2),
+            "por_pieza_mxn": round(por_pieza * datos.TIPO_CAMBIO, 2),
+        })
+
+    validacion = validar_embarque(id_embarque)
+    return{
+        "id": embarque["id"],
+        "contenedor": embarque["contenedor"],
+        "filas": filas,
+        "total_usd": round(total_aterrizado, 2),
+        "total_mxn": round(total_aterrizado * datos.TIPO_CAMBIO, 2),
+        "tipo_cambio": datos.TIPO_CAMBIO,
+        "discrepancias": validacion["discrepancias"],
+    }

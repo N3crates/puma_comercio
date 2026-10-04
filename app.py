@@ -142,5 +142,21 @@ def api_validacion(id_embarque):
     
     return jsonify({"ok": True, "validacion": resultado}), 200
 
+# Costeo
+@app.route("/costeo")
+@rol_requerido("Agente aduanal", "Gerencia / Finanzas")
+def costeo():
+    return render_template("costeo.html")
+
+@app.route("/api/embarques/<id_embarque>/costeo")
+@rol_requerido("Agente aduanal", "Gerencia / Finanzas")
+def api_costeo(id_embarque):
+    resultado = logica.calcular_costeo(id_embarque)
+
+    if resultado is None:
+        return jsonify({"ok": False, "mensajes": ["El embarque no existe."]}), 404
+
+    return jsonify({"ok": True, "costeo": resultado}), 200
+
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block titulo %}Costeo{% endblock %}
+
+{% block contenido %}
+    <h2>Costeo de importación</h2>
+    <p>Calcula impuestos y costo aterrizado por SKU y por pieza.</p>
+
+    <div class="panel">
+        <label for="selector-embarque">Embarque</label>
+        <select id="selector-embarque"></select>
+        <button type="button" id="boton-calcular" class="boton boton-principal boton-ancho">Calcular</button>
+    </div>
+
+    <div id="resultado" class="oculto">
+        <h3 id="titulo-resultado"></h3>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>SKU</th>
+                        <th>Cant.</th>
+                        <th>Fracción</th>
+                        <th>Valor origen</th>
+                        <th>Flete</th>
+                        <th>Honorarios</th>
+                        <th>IGI</th>
+                        <th>DTA</th>
+                        <th>IVA (informativo)</th>
+                        <th>Costo aterrizado</th>
+                        <th>Por pieza (USD)</th>
+                        <th>Por pieza (MXN)</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpo-tabla"></tbody>
+            </table>
+        </div>
+        <div class="total" id="total-embarque"></div>
+        <p class="nota">Nota: las fracciones y tasas son ilustrativas, no oficiales. Todos los importes en USD salvo la última columna. El IVA se muestra pero no se suma al costo aterrizado porque es acreditable.</p>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/costeo.js') }}"></script>
+{% endblock %}
