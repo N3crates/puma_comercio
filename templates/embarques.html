@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block titulo %}Embarques{% endblock %}
+
+{% block contenido %}
+    <h2>Embarques</h2>
+    <p>Consulta general con filtros.</p>
+
+    <div class="panel panel-ancho">
+        <div class="rejilla">
+            <div>
+                <label for="filtro-estatus">Estatus</label>
+                <select id="filtro-estatus">
+                    <option value="">Todos</option>
+                    {% for s in estatus %}
+                        <option value="{{ s }}">{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="filtro-buscar">Contenedor</label>
+                <input type="text" id="filtro-buscar" placeholder="Ej. MSKU">
+            </div>
+        </div>
+        <div class="acciones">
+            <button type="button" id="boton-buscar" class="boton boton-principal">Buscar</button>
+            <button type="button" id="boton-limpiar" class="boton boton-claro">Limpiar</button>
+        </div>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Contenedor</th>
+                    <th>Origen</th>
+                    <th>Puerto</th>
+                    <th>Estatus</th>
+                    <th>ETA</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpo-tabla"></tbody>
+        </table>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/embarques.js') }}"></script>
+{% endblock %}

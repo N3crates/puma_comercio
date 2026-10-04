@@ -157,3 +157,24 @@ th { background: var(--negro); color: var(--blanco); }
     border-left: 6px solid var(--rojo);
 }
 .nota { font-size: 0.85rem; color: #666666; }
+
+/* ---------- Dashboard ---------- */
+.tarjetas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+.tarjeta-dato {
+    background: var(--blanco);
+    border: 1px solid var(--gris-borde);
+    border-top: 4px solid var(--negro);
+    border-radius: 6px;
+    padding: 18px;
+}
+.tarjeta-dato span { display: block; font-size: 2rem; font-weight: 700; }
+.tarjeta-dato small { color: #666666; }
+.tarjeta-alerta { border-top-color: var(--rojo); }
+.gravedad { font-weight: 700; }
+.gravedad-alta { color: var(--rojo); }
+.gravedad-media { color: var(--amarillo); }
