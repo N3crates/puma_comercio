@@ -145,3 +145,15 @@ th { background: var(--negro); color: var(--blanco); }
     align-items: center;
 }
 .acciones { margin-top: 24px; display: flex; gap: 12px; }
+
+/* ---------- Costeo ---------- */
+.total {
+    background: var(--negro);
+    color: var(--blanco);
+    padding: 14px 18px;
+    margin-top: 16px;
+    border-radius: 4px;
+    font-weight: 700;
+    border-left: 6px solid var(--rojo);
+}
+.nota { font-size: 0.85rem; color: #666666; }
