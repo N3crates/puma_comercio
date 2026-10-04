@@ -112,3 +112,20 @@ th { background: var(--negro); color: var(--blanco); }
 }
 .tarjeta-login h1 { margin: 0; letter-spacing: 3px; }
 .tarjeta-login .subtitulo { margin: 4px 0 20px; color: #666666; }
+
+/* ---------- Paneles y utilidades ---------- */
+.panel {
+    background: var(--blanco);
+    padding: 20px;
+    border-radius: 6px;
+    margin-bottom: 24px;
+    border: 1px solid var(--gris-borde);
+    max-width: 480px;
+}
+.oculto { display: none; }
+
+/* ---------- Estados de la validación ---------- */
+.estado { font-weight: 600; }
+.estado-coincide { color: var(--verde); }
+.estado-faltante { color: var(--rojo); }
+.estado-excedente { color: var(--amarillo); }

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block titulo %}Validacion{% endblock %}
+
+{% block contenido %}
+    <h2>Validacion de embarque</h2>
+    <p>Compara las cantidades del pedido contra la factura de la fabrica.</p>
+
+    <div class="panel">
+        <label for="selector-embarque">Embarque</label>
+        <select id="selector-embarque"></select>
+        <button type="button" id="boton-validar" class="boton boton-principal boton-ancho">Validar</button>
+    </div>
+    <div id="resultado" class="oculto">
+        <h3 id="titulo-resultado"></h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>SKU</th>
+                    <th>Pedido</th>
+                    <th>Factura</th>
+                    <th>Diferencia</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpo-tabla"></tbody>
+        </table>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{url_for('static', filename='js/validacion.js')}}"></script>
+{% endblock %}
