@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block titulo %}Dashboard{% endblock %}
+
+{% block contenido %}
+    <h2>Dashboard</h2>
+    <p>Bienvenido(a), {{ session.get('nombre') }}. Esta pantalla se completará en la rama de rastreo y alertas.</p>
+{% endblock %}
