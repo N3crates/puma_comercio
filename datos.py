@@ -144,7 +144,7 @@ EMBARQUES = [
         "eta": "2026-10-20", "fecha_arribo": None, "estatus": "En transito", "flete": 4000.00,
         "honorarios": 630.00,
         "skus": [
-            {"sku": "PUM-SUD-002-L-NG", "pedido": 250, "factura": 200},
+            {"sku": "PUM-SUD-002-L-NG", "pedido": 200, "factura": 200},
             {"sku": "PUM-PLA-001-M-BL", "pedido": 500, "factura": 500},
             {"sku": "PUM-MOC-001-UN-NG", "pedido": 150, "factura": 150},
         ],

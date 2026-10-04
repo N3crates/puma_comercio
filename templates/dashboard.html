@@ -4,5 +4,41 @@
 
 {% block contenido %}
     <h2>Dashboard</h2>
-    <p>Bienvenido(a), {{ session.get('nombre') }}. Esta pantalla se completará en la rama de rastreo y alertas.</p>
+    <p>Bienvenido(a), {{ session.get('nombre') }}. Resumenb de la operadcion de importación.</p>
+
+    <div class="tarjetas">
+        <div class="tarjeta-dato">
+            <span id="dato-total">0</span>
+            <small>Embarques</small>
+        </div>
+        <div class="tarjeta-dato">
+            <span id="dato-transito">0</span>
+            <small>En tránsito</small>
+        </div>
+        <div class="tarjeta-dato">
+            <span id="dato-puerto">0</span>
+            <small>En puerto</small>
+        </div>
+        <div class="tarjeta-dato tarjeta-alerta">
+            <span id="dato-alertas">0</span>
+            <small>Con alertas</small>
+        </div>
+    </div>
+    <h3>Alertas activas</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Embarque</th>
+                <th>Contenedor</th>
+                <th>Alerta</th>
+                <th>Gravedad</th>
+                <th>Detalle</th>
+            </tr>
+        </thead>
+        <tbody id="cuerpo-alertas"></tbody>
+    </table>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/Dashboard.js')}}"></script>
 {% endblock %}

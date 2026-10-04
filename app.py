@@ -158,5 +158,15 @@ def api_costeo(id_embarque):
 
     return jsonify({"ok": True, "costeo": resultado}), 200
 
+@app.route("/api/dashboard")
+@rol_requerido(*datos.ROLES)
+def api_dashboard():
+    return jsonify({"ok": True, "resumen": logica.resumen_dashboard()}), 200
+
+@app.route("/embarques")
+@rol_requerido(*datos.ROLES)
+def embarques():
+    return render_template("embarques.html", estatus = datos.ESTATUS)
+
 if __name__ == "__main__":
     app.run(debug=True)

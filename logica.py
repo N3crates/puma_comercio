@@ -221,3 +221,76 @@ def calcular_costeo(id_embarque):
         "tipo_cambio": datos.TIPO_CAMBIO,
         "discrepancias": validacion["discrepancias"],
     }
+
+# Alertas y dashboard
+def _dias_entre(fecha_inicio, fecha_fin):
+    inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d")
+    fin = datetime.strptime(fecha_fin, "%Y-%m-%d")
+    return (fin - inicio).days
+
+def calcular_alertas(embarque):
+    alertas = []
+    hoy = datos.FECHA_REFERENCIA
+
+    en_transito = datos.ESTATUS[1]
+    en_puerto = datos.ESTATUS[2]
+
+    if embarque["estatus"] == en_puerto and embarque["fecha_arribo"]:
+        dias = _dias_entre(embarque["fecha_arribo"], hoy)
+        dias_demora = max(0, dias - datos.DIAS_LIBRES_PUERTO)
+        if dias_demora > 0:
+            costo = dias_demora * datos.COSTO_DEMORA_DIA
+            alertas.append({
+                "tipo": "Demora en puerto",
+                "gravedad": "Alta",
+                "detalle": str(dias) + " días en puerto, " + str(dias_demora) +
+                           " con cobro (USD " + str(costo) + ")",
+            })
+        elif dias >= 3:
+            alertas.append({
+                "tipo": "Riesgo de demora",
+                "gravedad": "Media",
+                "detalle": str(dias) + " días en puerto, cerca del límite de " +
+                           str(datos.DIAS_LIBRES_PUERTO),
+            })
+
+    if embarque["estatus"] == en_transito and embarque["eta"] < hoy:
+        retraso = _dias_entre(embarque["eta"], hoy)
+        alertas.append({
+            "tipo": "Retraso en tránsito",
+            "gravedad": "Media",
+            "detalle": "El ETA ya pasó hace " + str(retraso) + " día(s)",
+        })
+
+    validacion = validar_embarque(embarque["id"])
+    if validacion["discrepancias"] > 0:
+        alertas.append({
+            "tipo": "Discrepancia en documentos",
+            "gravedad": "Media",
+            "detalle": str(validacion["discrepancias"]) + " SKU(s) no coinciden con la factura",
+        })
+    return alertas
+
+def resumen_dashboard():
+    lista_alertas = []
+    con_alertas = 0
+
+    for e in datos.EMBARQUES:
+        alertas = calcular_alertas(e)
+        if alertas:
+            con_alertas += 1
+        for a in alertas:
+            lista_alertas.append({
+                "id": e["id"],
+                "contenedor": e["contenedor"],
+                "tipo": a["tipo"],
+                "gravedad": a["gravedad"],
+                "detalle": a["detalle"],
+            })
+    return{
+        "total": len(datos.EMBARQUES),
+        "en_transito": sum(1 for e in datos.EMBARQUES if e["estatus"] == datos.ESTATUS[1]),
+        "en_puerto": sum(1 for e in datos.EMBARQUES if e["estatus"] == datos.ESTATUS[2]),
+        "con_alertas": con_alertas,
+        "alertas": lista_alertas,
+    }
