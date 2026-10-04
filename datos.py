@@ -25,7 +25,7 @@ USUARIOS = [
     },
     {
        "nombre": "Carlos Ruiz",
-        "usuario": "carlos",
+       "usuario": "carlos",
        "password_hash": generate_password_hash("aduana123"),
        "rol": "Agente aduanal", 
     },
@@ -33,7 +33,7 @@ USUARIOS = [
         "nombre": "Andrea Solis",
         "usuario": "andrea",
         "password_hash": generate_password_hash("finanzas123"),
-        "rol": "Generencia / Finanzas",
+        "rol": "Gerencia / Finanzas",
     },
     {
         "nombre": "Administrador",

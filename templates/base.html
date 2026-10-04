@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block titulo %}PUMA{% endblock %} | Comercio Internacional</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+
+    {# Menú: cada opción lleva el nombre, la ruta y los roles que la ven.
+       El Administrador ve todas, por eso aparece en cada lista. #}
+    {% set rol = session.get('rol') %}
+    {% set opciones = [
+        ("Dashboard",          "/dashboard", ["Ejecutivo de trafico", "Agente aduanal", "Gerencia / Finanzas", "Administrador"]),
+        ("Registrar embarque", "/registrar", ["Ejecutivo de trafico", "Administrador"]),
+        ("Validacion",         "/validacion", ["Ejecutivo de trafico", "Administrador"]),
+        ("Costeo",             "/costeo", ["Agente aduanal", "Gerencia / Finanzas", "Administrador"]),
+        ("Rastreo",            "/rastreo", ["Ejecutivo de trafico", "Agente aduanal", "Administrador"]),
+        ("Embarques",          "/embarques", ["Ejecutivo de trafico", "Agente aduanal", "Gerencia / Finanzas", "Administrador"]),
+        ("Usuarios",           "/usuarios", ["Administrador"])
+    ] %}
+
+    <header class="encabezado">
+        <div class="encabezado-titulo">PUMA <span>| Gestión de Comercio Internacional</span></div>
+        <div class="encabezado-usuario">
+            <div>
+                <strong>{{ session.get('nombre') }}</strong><br>
+                <small>{{ rol }}</small>
+            </div>
+            <a class="boton boton-claro" href="/logout">Cerrar sesión</a>
+        </div>
+    </header>
+
+    <nav class="menu">
+        {% for nombre, ruta, roles in opciones %}
+            {% if rol in roles %}
+                <a href="{{ ruta }}" class="{{ 'activo' if request.path == ruta else '' }}">{{ nombre }}</a>
+            {% endif %}
+        {% endfor %}
+    </nav>
+
+    <main class="contenido">
+        {# Zona de mensajes: comun.js escribe aquí los avisos #}
+        <div id="mensajes"></div>
+
+        {% block contenido %}{% endblock %}
+    </main>
+
+    <script src="{{ url_for('static', filename='js/comun.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

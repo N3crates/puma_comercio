@@ -12,7 +12,9 @@ def verificar_credenciales(usuario, password):
 
     for u in datos.USUARIOS:
         if u["usuario"].lower() == usuario:
+            # check_password_hash compara la contraseña escrita contra el hash guardado
             if check_password_hash(u["password_hash"], password):
                 return u
-        return None # Usuario existe pero contraseña incorrecta
-    return None    # El usuario no existe
+            return None   # el usuario existe pero la contraseña no coincide
+
+    return None           # el usuario no existe

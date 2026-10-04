@@ -1,0 +1,114 @@
+/* estilos.css: diseño visual de todo el sistema */
+
+:root {
+    --negro: #111111;
+    --gris-oscuro: #333333;
+    --gris-claro: #f2f2f2;
+    --gris-borde: #d9d9d9;
+    --blanco: #ffffff;
+    --rojo: #d6001c;
+    --verde: #1b7f3b;
+    --amarillo: #b58100;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: var(--gris-claro);
+    color: var(--negro);
+}
+
+/* ---------- Encabezado y menú ---------- */
+.encabezado {
+    background: var(--negro);
+    color: var(--blanco);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.encabezado-titulo { font-size: 1.2rem; font-weight: 700; letter-spacing: 1px; }
+.encabezado-titulo span { font-weight: 400; font-size: 0.95rem; color: #bbbbbb; }
+.encabezado-usuario { display: flex; align-items: center; gap: 16px; text-align: right; }
+.encabezado-usuario small { color: #bbbbbb; }
+
+.menu {
+    background: var(--gris-oscuro);
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0 24px;
+}
+.menu a {
+    color: var(--blanco);
+    text-decoration: none;
+    padding: 12px 16px;
+    border-bottom: 3px solid transparent;
+}
+.menu a:hover { background: #444444; }
+.menu a.activo { border-bottom-color: var(--rojo); font-weight: 600; }
+
+/* ---------- Contenido ---------- */
+.contenido { max-width: 1100px; margin: 24px auto; padding: 0 24px; }
+h2 { margin-top: 0; }
+
+/* ---------- Botones ---------- */
+.boton {
+    display: inline-block;
+    padding: 9px 18px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    text-decoration: none;
+}
+.boton-principal { background: var(--negro); color: var(--blanco); }
+.boton-principal:hover { background: var(--rojo); }
+.boton-claro { background: var(--blanco); color: var(--negro); }
+.boton-claro:hover { background: var(--gris-borde); }
+.boton-ancho { width: 100%; margin-top: 16px; }
+
+/* ---------- Formularios ---------- */
+label { display: block; margin: 14px 0 4px; font-weight: 600; }
+input, select {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid var(--gris-borde);
+    border-radius: 4px;
+    font-size: 1rem;
+}
+input:focus, select:focus { outline: 2px solid var(--negro); }
+
+/* ---------- Mensajes ---------- */
+.mensaje { padding: 12px 16px; border-radius: 4px; margin-bottom: 16px; border-left: 5px solid; }
+.mensaje p { margin: 2px 0; }
+.mensaje-exito { background: #e6f4ea; border-color: var(--verde); color: var(--verde); }
+.mensaje-advertencia { background: #fff6dd; border-color: var(--amarillo); color: #7a5600; }
+.mensaje-error { background: #fde8ea; border-color: var(--rojo); color: var(--rojo); }
+
+/* ---------- Tablas (se usarán en las siguientes pantallas) ---------- */
+table { width: 100%; border-collapse: collapse; background: var(--blanco); }
+th, td { padding: 10px 12px; border-bottom: 1px solid var(--gris-borde); text-align: left; }
+th { background: var(--negro); color: var(--blanco); }
+
+/* ---------- Página de login ---------- */
+.pagina-login {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--negro);
+}
+.tarjeta-login {
+    background: var(--blanco);
+    width: 100%;
+    max-width: 380px;
+    padding: 32px;
+    border-radius: 8px;
+    border-top: 6px solid var(--rojo);
+}
+.tarjeta-login h1 { margin: 0; letter-spacing: 3px; }
+.tarjeta-login .subtitulo { margin: 4px 0 20px; color: #666666; }

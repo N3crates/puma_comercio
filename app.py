@@ -32,7 +32,7 @@ def rol_requerido(*roles_permetidos):
                 return mensaje, 403
 
             # Todo bien: Se ejecuta la ruta original
-            return function(*args, **kwargs)
+            return funcion(*args, **kwargs)
         return envoltura
     return decorador
 
