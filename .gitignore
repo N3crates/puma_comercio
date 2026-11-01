@@ -9,3 +9,6 @@ __pycache__/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Credenciales de la base de datos
+config_bd.py
