@@ -124,7 +124,7 @@ def guardar_embarque(embarque):
     conexion = _conectar()
     cur = conexion.cursor()
     try:
-        cur.execute("SELECT MAX(CAST(SUBSTRING(id_embarque, 5) AS UNISIGNED)) FROM embarques")
+        cur.execute("SELECT MAX(CAST(SUBSTRING(id_embarque, 5) AS UNSIGNED)) FROM embarques")
         mayor = cur.fetchone()[0] or 0
         nuevo_id = "EMB-" + str(mayor + 1).zfill(3)
 
@@ -132,7 +132,7 @@ def guardar_embarque(embarque):
         id_puerto = cur.fetchone()[0]
 
         cur.execute(
-            "INSERT INTO embarques (id_embarques, contenedor, origen, id_puerto, naviera, " \
+            "INSERT INTO embarques (id_embarque, contenedor, origen, id_puerto, naviera, " \
             "fecha_salida, eta, fecha_arribo, estatus, flete, honorarios) "
             "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
             (nuevo_id, embarque["contenedor"], embarque["origen"], id_puerto, embarque["naviera"], 
