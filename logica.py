@@ -7,22 +7,23 @@ import datos
 
 # Verificar usuario y contraseña
 def verificar_credenciales(usuario, password):
-    # Limpiar lo que se escribio
-    usuario = (usuario or ""). strip().lower()
+    usuario = (usuario or "").strip().lower()
     password = password or ""
 
-    for u in datos.USUARIOS:
-        if u["usuario"].lower() == usuario:
-            if check_password_hash(u["password_hash"], password):
-                return u
-            return None
+    if usuario == "":
+        return None
+
+    persona = datos.obtener_usuario(usuario)
+    if persona is None:
+        return None
+
+    if check_password_hash(persona["password_hash"], password):
+        return persona
+
     return None
 
 def buscar_embarque(id_embarque):
-    for e in datos.EMBARQUES:
-        if e["id"] == id_embarque:
-            return e
-    return None
+    return datos.obtener_embarque(id_embarque)
 
 def validar_embarque(id_embarque):
     embarque = buscar_embarque(id_embarque)
@@ -85,11 +86,8 @@ def validar_datos_embarque(nuevo):
 
     # Contenedor repetido (sin distinguir mayusculas)
     contenedor = str(nuevo.get("contenedor", "")).strip().upper()
-    if contenedor:
-        for e in datos.EMBARQUES:
-            if e["contenedor"].upper() == contenedor:
-                errores.append("El contenedor ya existe.")
-                break
+    if contenedor and datos.existe_contenedor(contenedor):
+        errores.append("El contenedor ya existe.")
 
     # Puerto valido
     if nuevo.get("puerto_destino") and nuevo["puerto_destino"] not in datos.PUERTOS:
@@ -138,9 +136,7 @@ def registrar_embarque(nuevo):
     if errores:
         return None, errores
 
-    numero = len(datos.EMBARQUES) + 1
     embarque = {
-        "id": "EMB-" + str(numero).zfill(3),
         "contenedor": nuevo["contenedor"].strip().upper(),
         "origen": nuevo["origen"].strip(),
         "puerto_destino": nuevo["puerto_destino"],
@@ -148,15 +144,18 @@ def registrar_embarque(nuevo):
         "fecha_salida": nuevo["fecha_salida"],
         "eta": nuevo["eta"],
         "fecha_arribo": None,
-        "estatus": "En origen",
+        "estatus": datos.ESTATUS[0],
         "flete": float(nuevo["flete"]),
         "honorarios": float(nuevo["honorarios"]),
         "skus": [{"sku": i["sku"], "pedido": i["pedido"], "factura": i["factura"]}
-                 for i in nuevo["skus"]]
+                 for i in nuevo["skus"]],
     }
-    datos.EMBARQUES.append(embarque)
+    try:
+        embarque["id"] = datos.guardar_embarque(embarque)
+    except Exception:
+        return None, ["No se pudo guardar el embarque en la base de datos."]
     return embarque, []
-
+    
 # Costeo
 def _producto(sku):
     for p in datos.CATALOGO:
@@ -272,25 +271,26 @@ def calcular_alertas(embarque):
     return alertas
 
 def resumen_dashboard():
-    lista_alertas = []
+    embarques = datos.listar_embarques()
+    listar_alertas = []
     con_alertas = 0
 
-    for e in datos.EMBARQUES:
+    for e in embarques:
         alertas = calcular_alertas(e)
         if alertas:
             con_alertas += 1
         for a in alertas:
-            lista_alertas.append({
+            listar_alertas.append({
                 "id": e["id"],
                 "contenedor": e["contenedor"],
                 "tipo": a["tipo"],
                 "gravedad": a["gravedad"],
                 "detalle": a["detalle"],
             })
-    return{
-        "total": len(datos.EMBARQUES),
-        "en_transito": sum(1 for e in datos.EMBARQUES if e["estatus"] == datos.ESTATUS[1]),
-        "en_puerto": sum(1 for e in datos.EMBARQUES if e["estatus"] == datos.ESTATUS[2]),
-        "con_alertas": con_alertas,
-        "alertas": lista_alertas,
+
+    return {
+        "total": len(embarques),
+        "en_transito": sum(1 for e in embarques if e["estatus"] == datos.ESTATUS[1]),
+        "en_puerto": sum(1 for e in embarques if e["estatus"] == datos.ESTATUS[2]),
+        "con_alertas": con_alertas, "alertas": listar_alertas,
     }
