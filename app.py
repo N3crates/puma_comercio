@@ -106,7 +106,7 @@ def api_embarques():
     buscar = request.args.get("buscar", "").strip().upper()
 
     resultado = []
-    for e in datos.EMBARQUES:
+    for e in datos.listar_embarques():
         if estatus and e["estatus"] != estatus:
             continue
         if buscar and buscar not in e["contenedor"].upper():
