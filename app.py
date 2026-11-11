@@ -111,7 +111,10 @@ def api_embarques():
             continue
         if buscar and buscar not in e["contenedor"].upper():
             continue
-        resultado.append(e)
+        item = dict(e)
+        item["siguiente"] = logica.siguiente_estatus(e["estatus"])
+        item["puede_cambiar"] = bool(item["siguiente"]) and logica.rol_puede_asignar(session["rol"], item["siguiente"])
+        resultado.append(item)
 
     return jsonify({"ok": True, "embarques": resultado}), 200
 
@@ -119,7 +122,7 @@ def api_embarques():
 @rol_requerido("Ejecutivo de trafico")
 def api_registrar_embarque():
     recibido = request.get_json(silent=True) or {}
-    embarque, errores = logica.registrar_embarque(recibido)
+    embarque, errores = logica.registrar_embarque(recibido, session["usuario"])
 
     if errores:
         # Si el problema es un contenedor repetido (409)
@@ -167,6 +170,28 @@ def api_dashboard():
 @rol_requerido(*datos.ROLES)
 def embarques():
     return render_template("embarques.html", estatus = datos.ESTATUS)
+
+@app.route("/api/embarques/<id_embarque>/estatus", methods = ["POST"])
+@rol_requerido("Ejecutivo de trafico", "Agente aduanal")
+def api_cambiar_estatus(id_embarque):
+    recibido = request.get_json(silent=True) or {}
+    resultado, errores, codigo = logica.cambiar_estatus(
+        id_embarque, recibido.get("estatus"), recibido.get("fecha"),
+        recibido.get("comentario"), session["rol"], session["usuario"]
+    )
+
+    if errores:
+        return jsonify({"ok": False, "mensajes": errores}), codigo
+
+    return jsonify({"ok": True, "mensajes": ["Estatus actualizado a " + resultado["estatus"] + "."]}), 200
+
+@app.route("/api/embarques/<id_embarque>/historial")
+@rol_requerido(*datos.ROLES)
+def api_historial(id_embarque):
+    if logica.buscar_embarque(id_embarque) is None:
+        return jsonify({"ok": False, "mensajes": ["El embarque no existe."]}), 404
+
+    return jsonify({"ok": True, "historial": datos.listar_historial(id_embarque)}), 200
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,6 +1,7 @@
 import mysql.connector
 
 from config_bd import CONFIG_BD
+from datetime import date
 
 ESTATUS = ["En origen", "En transito", "En puerto", "Liberado", "Entregado en CD"]
 
@@ -59,7 +60,6 @@ DTA = float(_PARAMETROS["dta"]["valor_num"])
 TIPO_CAMBIO = _numero(_PARAMETROS["tipo_cambio"]["valor_num"])
 DIAS_LIBRES_PUERTO = _numero(_PARAMETROS["dias_libres_puerto"]["valor_num"])
 COSTO_DEMORA_DIA = _numero(_PARAMETROS["costo_demora_dia"]["valor_num"])
-FECHA_REFERENCIA = _PARAMETROS["fecha_referencia"]["valor_fecha"].isoformat()
 
 # Usuarios
 def obtener_usuario(usuario):
@@ -120,7 +120,7 @@ def existe_contenedor(contenedor):
                        (contenedor.strip().upper(),))
     return len(filas) > 0
 
-def guardar_embarque(embarque):
+def guardar_embarque(embarque, id_usuario=None):
     conexion = _conectar()
     cur = conexion.cursor()
     try:
@@ -131,22 +131,61 @@ def guardar_embarque(embarque):
         cur.execute("SELECT id_puerto FROM puertos WHERE nombre = %s", (embarque["puerto_destino"],))
         id_puerto = cur.fetchone()[0]
 
-        cur.execute(
-            "INSERT INTO embarques (id_embarque, contenedor, origen, id_puerto, naviera, " \
-            "fecha_salida, eta, fecha_arribo, estatus, flete, honorarios) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-            (nuevo_id, embarque["contenedor"], embarque["origen"], id_puerto, embarque["naviera"], 
-             embarque["fecha_salida"], embarque["eta"], embarque["fecha_arribo"],
-             embarque["estatus"], embarque["flete"], embarque["honorarios"])
-        )
+        sql_embarque = "INSERT INTO embarques (id_embarque, contenedor, origen, id_puerto, naviera, fecha_salida, eta, fecha_arribo, estatus, flete, honorarios) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        cur.execute(sql_embarque, (nuevo_id, embarque["contenedor"], embarque["origen"], id_puerto, 
+                                   embarque["naviera"], embarque["fecha_salida"], embarque["eta"],
+                                   embarque["fecha_arribo"], embarque["estatus"],
+                                   embarque["flete"], embarque["honorarios"]))
+
+        sql_detalle = "INSERT INTO detalle_embarque (id_embarque, sku, cantidad_pedida, cantidad_facturada) VALUES (%s, %s, %s, %s)"
         for item in embarque["skus"]:
-            cur.execute(
-                "INSERT INTO detalle_embarque (id_embarque, sku, cantidad_pedida, cantidad_facturada) "
-                "VALUES (%s, %s, %s, %s)",
-                (nuevo_id, item["sku"], item["pedido"], item["factura"])
-            )
+            cur.execute(sql_detalle, (nuevo_id, item["sku"], item["pedido"], item["factura"]))
+
+        sql_historial = "INSERT INTO historial_estatus (id_embarque, estatus, fecha_cambio, id_usuario, comentario) VALUES (%s, %s, %s, %s, %s)"
+        cur.execute(sql_historial, (nuevo_id, embarque["estatus"], embarque["fecha_salida"], id_usuario, "Embarque registrado"))
+
         conexion.commit()
         return nuevo_id
+    except Exception:
+        conexion.rollback()
+        raise
+    finally:
+        cur.close()
+        conexion.close()
+
+def fecha_referencia():
+    filas = _consultar("SELECT valor_fecha FROM parametros WHERE clave = 'fecha_simulacion'")
+    if filas and filas[0]["valor_fecha"]:
+        return filas[0]["valor_fecha"].isoformat()
+    return date.today().isoformat()
+
+def obtener_id_usuario(usuario):
+    filas = _consultar("SELECT id_usuario FROM usuarios WHERE LOWER(usuario) = %s", ((usuario or "").lower(),))
+    return filas[0]["id_usuario"] if filas else None
+
+def listar_historial(id_embarque):
+    sql = "SELECT h.estatus, h.fecha_cambio, u.nombre AS usuario, h.comentario FROM historial_estatus h LEFT JOIN usuarios u ON u.id_usuario = h.id_usuario WHERE h.id_embarque = %s ORDER BY h.fecha_cambio, h.id_historial"
+    resultado = []
+    for f in _consultar(sql, (id_embarque,)):
+        resultado.append({
+            "estatus": f["estatus"],
+            "fecha": f["fecha_cambio"].isoformat(),
+            "usuario": f["usuario"] or "Sistema",
+            "comentario": f["comentario"] or "",
+        })
+    return resultado
+
+def cambiar_estatus(id_embarque, nuevo_estatus, fecha, id_usuario, comentario):
+    conexion = _conectar()
+    cur = conexion.cursor()
+    try:
+        if nuevo_estatus == ESTATUS[2]:
+            cur.execute("UPDATE embarques SET estatus = %s, fecha_arribo = %s WHERE id_embarque = %s", (nuevo_estatus, fecha, id_embarque))
+        else:
+            cur.execute("UPDATE embarques SET estatus = %s WHERE id_embarque = %s", (nuevo_estatus, id_embarque))
+
+        cur.execute("INSERT INTO historial_estatus (id_embarque, estatus, fecha_cambio, id_usuario, comentario) VALUES (%s, %s, %s, %s, %s)", (id_embarque, nuevo_estatus, fecha, id_usuario, comentario or None))
+        conexion.commit()
     except Exception:
         conexion.rollback()
         raise
