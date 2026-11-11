@@ -3,6 +3,7 @@
 from datetime import datetime
 from werkzeug.security import check_password_hash
 
+import traceback
 import datos
 
 # Verificar usuario y contraseña
@@ -131,7 +132,7 @@ def validar_datos_embarque(nuevo):
 
     return errores
 
-def registrar_embarque(nuevo):
+def registrar_embarque(nuevo, usuario=None):
     errores = validar_datos_embarque(nuevo)
     if errores:
         return None, errores
@@ -151,7 +152,8 @@ def registrar_embarque(nuevo):
                  for i in nuevo["skus"]],
     }
     try:
-        embarque["id"] = datos.guardar_embarque(embarque)
+        id_usuario = datos.obtener_id_usuario(usuario) if usuario else None
+        embarque["id"] = datos.guardar_embarque(embarque, id_usuario)
     except Exception:
         return None, ["No se pudo guardar el embarque en la base de datos."]
     return embarque, []
@@ -229,7 +231,7 @@ def _dias_entre(fecha_inicio, fecha_fin):
 
 def calcular_alertas(embarque):
     alertas = []
-    hoy = datos.FECHA_REFERENCIA
+    hoy = datos.fecha_referencia()
 
     en_transito = datos.ESTATUS[1]
     en_puerto = datos.ESTATUS[2]
@@ -294,3 +296,63 @@ def resumen_dashboard():
         "en_puerto": sum(1 for e in embarques if e["estatus"] == datos.ESTATUS[2]),
         "con_alertas": con_alertas, "alertas": listar_alertas,
     }
+
+PERMISOS_ESTATUS = {
+    "Ejecutivo de trafico": ["En transito", "En puerto", "Entregado en CD"],
+    "Agente aduanal": ["Liberado"],
+}
+
+def siguiente_estatus(estatus):
+    lista = datos.ESTATUS
+    if estatus not in lista:
+        return None
+
+    posicion = lista.index(estatus)
+    if posicion + 1 >= len(lista):
+        return None
+    return lista[posicion + 1]
+
+def rol_puede_asignar(rol, estatus):
+    if rol == "Administrador":
+        return True
+    return estatus in PERMISOS_ESTATUS.get(rol, [])
+
+def cambiar_estatus(id_embarque, nuevo, fecha, comentario, rol, usuario):
+    embarque = buscar_embarque(id_embarque)
+    if embarque is None:
+        return None, ["El embarque no existe."], 404
+
+    nuevo = (nuevo or "").strip()
+    comentario = (comentario or "").strip()
+
+    siguiente = siguiente_estatus(embarque["estatus"])
+    if siguiente is None:
+        return None, ["El embarque ya esta en el ultimo estatus."], 400
+    if nuevo != siguiente:
+        return None, ["Solo se puede avanzar al siguiente estatus: " + siguiente + "."], 400
+    if not rol_puede_asignar(rol, nuevo):
+        return None, ["Tu rol no puede asignar el estatus " + nuevo + "."], 403
+
+    errores = []
+    if not _fecha_valida(fecha):
+        errores.append("La fecha no es valida.")
+    else:
+        historial = datos.listar_historial(id_embarque)
+        minima = historial[-1]["fecha"] if historial else embarque["fecha_salida"]
+        if fecha < minima:
+            errores.append("La fecha no puede ser anterior a " + minima + ".")
+        if fecha > datos.fecha_referencia():
+            errores.append("La fecha no puede ser futura.")
+    if len(comentario) > 200:
+        errores.append("El comentario no puede pasar de 200 caracteres.")
+    if errores:
+        return None, errores, 400
+
+    try:
+        id_usuario = datos.obtener_id_usuario(usuario)
+        datos.cambiar_estatus(id_embarque, nuevo, fecha, id_usuario, comentario)
+    except Exception:
+        traceback.print_exc()
+        return None, ["No se pudo guardar el cambio en la base de datos."], 500
+
+    return {"id": id_embarque, "estatus": nuevo}, [], 200

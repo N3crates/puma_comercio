@@ -4,7 +4,7 @@
 
 {% block contenido %}
     <h2>Embarques</h2>
-    <p>Consulta general con filtros.</p>
+    <p>Consulta general, cambio de estatus e historial.</p>
 
     <div class="panel panel-ancho">
         <div class="rejilla">
@@ -38,11 +38,47 @@
                     <th>Puerto</th>
                     <th>Estatus</th>
                     <th>ETA</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody id="cuerpo-tabla"></tbody>
         </table>
     </div>
+    <div id="panel-estatus" class="panel panel-ancho oculto">
+        <h3 id="titulo-estatus"></h3>
+        <div class="rejilla">
+            <div>
+                <label for="estatus-fecha">Fecha del cambio</label>
+                <input type="date" id="estatus-fecha">
+            </div>
+            <div>
+                <label for="estatus-comentario">Comentario (opcional)</label>
+                <input type="text" id="estatus-comentario" maxlength="200">
+            </div>
+        </div>
+        <div class="acciones">
+            <button type="button" id="boton-confirmar-estatus" class="boton boton-principal">Confirmar cambio</button>
+            <button type="button" id="boton-cancelar-estatus" class="boton boton-claro">Cancelar</button>
+        </div>
+    </div>
+    <div id="panel-historial" class="oculto">
+        <h3 id="titulo-historial"></h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Estatus</th>
+                    <th>Usuario</th>
+                    <th>Comentario</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpo-historial"></tbody>
+        </table>
+        <div class="acciones">
+            <button type="button" id="boton-cerrar-historial" class="boton boton-claro">Cerrar historial</button>
+        </div>
+    </div>
+
 {% endblock %}
 
 {% block scripts %}
