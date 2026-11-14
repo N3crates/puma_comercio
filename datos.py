@@ -192,3 +192,13 @@ def cambiar_estatus(id_embarque, nuevo_estatus, fecha, id_usuario, comentario):
     finally:
         cur.close()
         conexion.close()
+
+# Rastreo
+def obtener_id_contenedor(contenedor):
+    filas = _consultar("SELECT id_embarque FROM embarques WHERE UPPER(contenedor) = %s", ((contenedor or "").strip().upper(),))
+    return filas[0]["id_embarque"] if filas else None
+
+def listar_embarques_sku(sku):
+    sql = "SELECT id_embarque, cantidad_pedida, cantidad_facturada FROM detalle_embarque WHERE sku = %s ORDER BY id_embarque"
+    return [{"id": f["id_embarque"], "pedido": f["cantidad_pedida"], "factura": f["cantidad_facturada"]}
+            for f in _consultar(sql, (sku,))]

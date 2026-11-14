@@ -356,3 +356,129 @@ def cambiar_estatus(id_embarque, nuevo, fecha, comentario, rol, usuario):
         return None, ["No se pudo guardar el cambio en la base de datos."], 500
 
     return {"id": id_embarque, "estatus": nuevo}, [], 200
+
+# Rastreo
+def _fecha_estatus(historial, estatus):
+    fecha = None
+    for h in historial:
+        if h["estatus"] == estatus:
+            fecha = h["fecha"]
+    return fecha
+
+def calcular_ficha_rastreo(embarque):
+    hoy = datos.fecha_referencia()
+    historial = datos.listar_historial(embarque["id"])
+    lista = datos.ESTATUS
+    posicion = lista.index(embarque["estatus"])
+
+    # Dias en transito
+    dias_transito = 0
+    if posicion > 0:
+        fin = embarque["fecha_arribo"] or hoy
+        dias_transito = max(0, _dias_entre(embarque["fecha_salida"], fin))
+
+    # Dias en puerto
+    dias_puerto = 0
+    if embarque["fecha_arribo"]:
+        fin = hoy
+        if posicion >= 3:
+            fin = _fecha_estatus(historial, lista[3]) or hoy
+        dias_puerto = max(0, _dias_entre(embarque["fecha_arribo"], fin))
+
+    dias_demora = max(0, dias_puerto - datos.DIAS_LIBRES_PUERTO)
+    costo_demora = dias_demora * datos.COSTO_DEMORA_DIA
+
+    # ETA
+    if posicion < 2:
+        dias_eta = _dias_entre(hoy, embarque["eta"])
+        if dias_eta >= 0:
+            texto_eta = "Faltan " + str(dias_eta) + " dia(s) para el ETA."
+        else:
+            texto_eta = "Retraso de " + str(-dias_eta) + " dia(s) respecto al ETA."
+    else:
+        texto_eta = "El contenedor ya llego a puerto."
+
+    # Linea de tiempo
+    linea = []
+    for i, nombre in enumerate(lista):
+        registro = None
+        for h in historial:
+            if h["estatus"] == nombre:
+                registro = h
+        if i < posicion:
+            estado = "completado"
+        elif i == posicion:
+            estado = "actual"
+        else:
+            estado = "pendiente"
+            registro = None
+        linea.append({
+            "estatus": nombre,
+            "estado": estado,
+            "fecha": registro["fecha"] if registro else "",
+            "usuario": registro["usuario"] if registro else "",
+            "comentario": registro["comentario"] if registro else "",
+        })
+
+    # Producto del embarque 
+    productos = []
+    for item in embarque["skus"]:
+        p = _producto(item["sku"])
+        productos.append({
+            "sku": item["sku"],
+            "descripcion": p["descripcion"] if p else "",
+            "cantidad": item["factura"],
+        })
+
+    return {
+        "id": embarque["id"],
+        "contenedor": embarque["contenedor"],
+        "origen": embarque["origen"],
+        "puerto_destino": embarque["puerto_destino"],
+        "naviera": embarque["naviera"],
+        "estatus": embarque["estatus"],
+        "fecha_salida": embarque["fecha_salida"],
+        "eta": embarque["eta"],
+        "fecha_arribo": embarque["fecha_arribo"],
+        "dias_transito": dias_transito,
+        "dias_puerto": dias_puerto,
+        "dias_demora": dias_demora,
+        "costo_demora": costo_demora,
+        "texto_eta": texto_eta,
+        "alertas": calcular_alertas(embarque),
+        "linea_tiempo": linea,
+        "productos": productos,
+    }
+
+def buscar_rastreo(contenedor, sku):
+    contenedor = (contenedor or "").strip().upper()
+    sku = (sku or "").strip()
+    if not contenedor and not sku:
+        return None, ["Escribe un contenedor o elige un SKU."]
+
+    cantidades = {}
+    if sku:
+        for r in datos.listar_embarques_sku(sku):
+            cantidades[r["id"]] = r["factura"]
+
+    resultado = []
+    for e in datos.listar_embarques():
+        if sku and e["id"] not in cantidades:
+            continue
+        if contenedor and contenedor not in e["contenedor"].upper():
+            continue
+        resultado.append({
+            "id": e["id"],
+            "contenedor": e["contenedor"],
+            "puerto_destino": e["puerto_destino"],
+            "estatus": e["estatus"],
+            "eta": e["eta"],
+            "cantidad": cantidades.get[e["id"]] if sku else sum(i["factura"] for i in e["skus"]),
+        })
+    return resultado, []
+
+def ficha_rastreo(contenedor):
+    id_embarque = datos.obtener_id_contenedor(contenedor)
+    if id_embarque is None:
+        return None
+    return calcular_ficha_rastreo(buscar_embarque(id_embarque))

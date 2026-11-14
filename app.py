@@ -114,6 +114,7 @@ def api_embarques():
         item = dict(e)
         item["siguiente"] = logica.siguiente_estatus(e["estatus"])
         item["puede_cambiar"] = bool(item["siguiente"]) and logica.rol_puede_asignar(session["rol"], item["siguiente"])
+        item["puede_rastrear"] = session["rol"] in ("Ejecutivo de trafico", "Agente aduanal", "Administrador")
         resultado.append(item)
 
     return jsonify({"ok": True, "embarques": resultado}), 200
@@ -192,6 +193,28 @@ def api_historial(id_embarque):
         return jsonify({"ok": False, "mensajes": ["El embarque no existe."]}), 404
 
     return jsonify({"ok": True, "historial": datos.listar_historial(id_embarque)}), 200
+
+# Rastreo
+@app.route("/rastreo")
+@rol_requerido("Ejecutivo de trafico", "Agente aduanal")
+def rastreo():
+    return render_template("rastreo.html", catalogo = datos.CATALOGO)
+
+@app.route("/api/rastreo")
+@rol_requerido("Ejecutivo de trafico", "Agente aduanal")
+def api_buscar_rastreo():
+    resultado, errores = logica.buscar_rastreo(request.args.get("contenedor"), request.args.get("sku"))
+    if errores:
+        return jsonify({"ok": False, "mensajes": errores}), 400
+    return jsonify({"ok": True, "resultados": resultado}), 200
+
+@app.route("/api/rastreo/<contenedor>")
+@rol_requerido("Ejecutivo de trafico", "Agente aduanal")
+def api_fecha_rastreo(contenedor):
+    ficha = logica.ficha_rastreo(contenedor)
+    if ficha is None:
+        return jsonify({"ok": False, "mensajes": ["El contenedor no existe."]}),404
+    return jsonify({"ok": True, "ficha": ficha}), 200
 
 if __name__ == "__main__":
     app.run(debug=True)
