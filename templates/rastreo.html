@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block titulo %}Rastreo{% endblock %}
+
+{% block contenido %}
+    <h2>Rastreo</h2>
+    <p>Ubica un contenedor o descubre en que contenedores viene un producto.</p>
+
+    <div class="panel panel-ancho">
+        <div class="rejilla">
+            <div>
+                <label for="buscar-contenedor">Contenedor</label>
+                <input type="text" id="buscar-contenedor" placeholder="Ej. MSKU">
+            </div>
+            <div>
+                <label for="buscar-sku">Producto (sku)</label>
+                <select id="buscar-sku">
+                    <option value="">Todos</option>
+                    {% for p in catalogo %}
+                        <option value="{{ p.sku }}">{{ p.sku }} - {{ p.descripcion }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="acciones">
+            <button type="button" id="boton-buscar" class="boton boton-principal">Buscar</button>
+            <button type="button" id="boton-limpiar" class="boton boton-claro">Limpiar</button>
+        </div>
+    </div>
+    <div id="zona-resultados" class="oculto">
+        <h3>Resultados</h3>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Embarque</th>
+                        <th>Contenedor</th>
+                        <th>Puerto</th>
+                        <th>Estatus</th>
+                        <th>ETA</th>
+                        <th>Piezas</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpo-resultados"></tbody>
+            </table>
+        </div>
+    </div>
+    <div id="zona-ficha" class="oculto">
+        <h3 id="titulo-ficha"></h3>
+        <div id="datos-ficha" class="ficha-grid"></div>
+        <p id="texto-eta" class="nota-eta"></p>
+        <h3>Linea de tiempo</h3>
+        <ol id="linea-tiempo" class="linea-tiempo"></ol>
+        <h3>Alertas</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Alertas</th>
+                    <th>Gravedad</th>
+                    <th>Detalle</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpo-alertas-ficha"></tbody>
+        </table>
+        <h3>Productos del embarque</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>SKU</th>
+                    <th>Descripcion</th>
+                    <th>Cantidad facturada</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpo-productos"></tbody>
+        </table>
+        <div class="acciones">
+            <button type="button" id="boton-cerrar-ficha" class="boton boton-claro">Cerrar ficha</button>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/rastreo.js') }}"></script>
+{% endblock %}
+    

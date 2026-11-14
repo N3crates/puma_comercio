@@ -224,3 +224,66 @@ button.boton:hover{
     border-color: var(--rojo);
     filter: none;
 }
+
+/** Rastreo **/
+.ficha-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.dato-ficha{
+    background: var(--blanco);
+    border: 1px solid var(--gris-borde);
+    border-left: 4px solid var(--negro);
+    border-radius: 4px;
+    padding: 10 px 14px;
+}
+
+.dato-ficha small{
+    display: block;
+    color: #666666;
+}
+
+.nota-eta{
+    font-weight: 600;
+}
+
+.linea-tiempo{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 24px;
+}
+
+.paso{
+    flex: 1;
+    min-width: 150px;
+    background: var(--blanco);
+    border: 1px solid var(--gris-borde);
+    border-top: 6px solid var(--gris-borde);
+    border-radius: 4px;
+    padding: 12px;
+}
+
+.paso small{
+    display: block;
+    color: #666666;
+}
+
+.paso-completado{
+    border-top-color: var(--verde);
+}
+
+.paso-actual{
+    border-top-color: var(--rojo);
+    box-shadow: 0 0 0 2px var(--rojo);
+}
+
+.paso-pendiente{
+    color: #999999;
+    background: var(--gris-claro);
+}

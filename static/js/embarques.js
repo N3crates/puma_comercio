@@ -58,6 +58,11 @@ async function cargarEmbarques() {
                 abrirPanelEstatus(e)
             }))
         }
+        if(e.puede_rastrear){
+            acciones.appendChild(crearBoton("Rastrear", "boton-claro", function(){
+                window.location.href = "/rastreo?contenedor=" + encodeURIComponent(e.contenedor)
+            }))
+        }
         tr.appendChild(acciones)
         cuerpoTabla.appendChild(tr)
     })
