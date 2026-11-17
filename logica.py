@@ -74,7 +74,7 @@ def _numero_no_negativo(valor):
         return None
     return numero if numero >= 0 else None
 
-def validar_datos_embarque(nuevo):
+def validar_datos_embarque(nuevo, id_actual=None):
     errores = []
 
     # Campos de texto obligatorios
@@ -87,8 +87,10 @@ def validar_datos_embarque(nuevo):
 
     # Contenedor repetido (sin distinguir mayusculas)
     contenedor = str(nuevo.get("contenedor", "")).strip().upper()
-    if contenedor and datos.existe_contenedor(contenedor):
-        errores.append("El contenedor ya existe.")
+    if contenedor:
+        existente = datos.obtener_id_contenedor(contenedor)
+        if existente is not None and existente != id_actual:
+            errores.append("El contenedor ya existe.")
 
     # Puerto valido
     if nuevo.get("puerto_destino") and nuevo["puerto_destino"] not in datos.PUERTOS:
@@ -482,3 +484,49 @@ def ficha_rastreo(contenedor):
     if id_embarque is None:
         return None
     return calcular_ficha_rastreo(buscar_embarque(id_embarque))
+
+def editar_embarque(id_embarque, nuevo):
+    embarque = buscar_embarque(id_embarque)
+    if embarque is None:
+        return None, ["El embarque no existe."], 404
+    if embarque["estatus"] not in datos.ESTATUS[:3]:
+        return None, ["Ya no se puede editar: el embarque esta en " + embarque["estatus"] + "."], 404
+    nuevo = dict(nuevo or {})
+    nuevo["contenedor"] = embarque["contenedor"]
+    errores = validar_datos_embarque(nuevo, id_embarque)
+
+    if not errores and embarque["fecha_arribo"] and nuevo["fecha_salida"] > embarque["fecha_arribo"]:
+        errores.append("La fecha de salida no puede ser posterior a la de arribo (" + embarque["fecha_arribo"]+").")
+    if errores:
+        return None, errores, 400
+
+    cambios = {
+        "origen": nuevo["origen"].strip(),
+        "puerto_destino": nuevo["puerto_destino"],
+        "naviera": nuevo["naviera"].strip(),
+        "fecha_salida": nuevo["fecha_salida"],
+        "eta": nuevo["eta"],
+        "flete": float(nuevo["flete"]),
+        "honorarios": float(nuevo["honorarios"]),
+        "skus": [{"sku": i["sku"], "pedido": i["pedido"], "factura": i["factura"]} for i in nuevo["skus"]],
+    }
+    try:
+        datos.actualizar_embarque(id_embarque, cambios)
+    except Exception:
+        traceback.print_exc()
+        return None, ["No se pudo guardar el cambio en la base de datos."], 500
+
+    return {"id": id_embarque}, [], 200
+
+def eliminar_embarque(id_embarque):
+    embarque = buscar_embarque(id_embarque)
+    if embarque is None:
+        return["El embarque no existe"], 404
+    if embarque["estatus"] != datos.ESTATUS[0]:
+        return["Solo se puede eliminar embarques que siguen en " + datos.ESTATUS[0] + "."], 400
+    try:
+        datos.eliminar_embarque(id_embarque)
+    except Exception:
+        traceback.print_exc()
+        return["No se pudo eliminar el embarque de la base de datos."], 500
+    return [], 200

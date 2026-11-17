@@ -63,6 +63,18 @@ async function cargarEmbarques() {
                 window.location.href = "/rastreo?contenedor=" + encodeURIComponent(e.contenedor)
             }))
         }
+
+        if(e.puede_editar){
+            acciones.appendChild(crearBoton("Editar", "boton-claro", function(){
+                window.location.href = "/editar/" + encodeURIComponent(e.id)
+            }))
+        }
+        if(e.puede_eliminar){
+            acciones.appendChild(crearBoton("Eliminar", "boton-claro", function() {
+                eliminarEmbarque(e)
+            }))
+        }
+
         tr.appendChild(acciones)
         cuerpoTabla.appendChild(tr)
     })
@@ -133,6 +145,19 @@ async function mostrarHistorial(id){
 function cerrarHistorial(){
     panelHistorial.classList.add("oculto")
     cuerpoHistorial.innerHTML = ""
+}
+
+async function eliminarEmbarque(e){
+    if(!window.confirm("¿Eliminar el embarque " + e.id + " (" + e.contenedor + ")? Esta accion no se puede deshacer.")) return
+
+    const respuesta = await enviarJSON("/api/embarques/" + encodeURIComponent(e.id), "DELETE")
+    if(!respuesta.datos.ok){
+        mostrarMensaje("error", respuesta.datos.mensajes)
+        return
+    }
+
+    await cargarEmbarques()
+    mostrarMensaje("exito", respuesta.datos.mensajes)
 }
 
 document.getElementById("boton-buscar").addEventListener("click", cargarEmbarques)

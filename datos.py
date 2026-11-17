@@ -202,3 +202,39 @@ def listar_embarques_sku(sku):
     sql = "SELECT id_embarque, cantidad_pedida, cantidad_facturada FROM detalle_embarque WHERE sku = %s ORDER BY id_embarque"
     return [{"id": f["id_embarque"], "pedido": f["cantidad_pedida"], "factura": f["cantidad_facturada"]}
             for f in _consultar(sql, (sku,))]
+
+# Edicion y eliminacion de embarques
+def actualizar_embarque(id_embarque, cambios):
+    conexion = _conectar()
+    cur = conexion.cursor()
+    try:
+        cur.execute("SELECT id_puerto FROM puertos WHERE nombre = %s", (cambios["puerto_destino"],))
+        id_puerto = cur.fetchone()[0]
+        sql = "UPDATE embarques SET origen = %s, id_puerto = %s, naviera = %s, fecha_salida = %s, eta = %s, flete = %s, honorarios = %s WHERE id_embarque = %s"
+        cur.execute(sql, (cambios["origen"], id_puerto, cambios["naviera"], cambios["fecha_salida"],
+                          cambios["eta"], cambios["flete"], cambios["honorarios"], id_embarque))
+
+        cur.execute("DELETE FROM detalle_embarque WHERE id_embarque = %s", (id_embarque,))
+        sql_detalle = "INSERT INTO detalle_embarque (id_embarque, sku, cantidad_pedida, cantidad_facturada) VALUES (%s, %s, %s, %s)"
+        for item in cambios["skus"]:
+            cur.execute(sql_detalle, (id_embarque, item["sku"], item["pedido"], item["factura"]))
+        conexion.commit()
+    except Exception:
+        conexion.rollback()
+        raise
+    finally:
+        cur.close()
+        conexion.close()
+
+def eliminar_embarque(id_embarque):
+    conexion = _conectar()
+    cur = conexion.cursor()
+    try:
+        cur.execute("DELETE FROM embarques WHERE id_embarque = %s", (id_embarque,))
+        conexion.commit()
+    except Exception:
+        conexion.rollback()
+        raise
+    finally:
+        cur.close()
+        conexion.close()
