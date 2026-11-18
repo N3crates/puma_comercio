@@ -272,6 +272,14 @@ def calcular_alertas(embarque):
             "gravedad": "Media",
             "detalle": str(validacion["discrepancias"]) + " SKU(s) no coinciden con la factura",
         })
+    if embarque["estatus"] == datos.ESTATUS[4]:
+        rec = obtener_recepcion_completa(embarque["id"])
+        if rec and rec["registrada"] and rec["discrepancias"] > 0:
+            alertas.append({
+                "tipo": "Discrepancia en recepcion",
+                "gravedad": "Media",
+                "detalle": str(rec["discrepancias"]) + " SKU(s) con diferencia o daños en el CD"
+            })
     return alertas
 
 def resumen_dashboard():
@@ -300,7 +308,7 @@ def resumen_dashboard():
     }
 
 PERMISOS_ESTATUS = {
-    "Ejecutivo de trafico": ["En transito", "En puerto", "Entregado en CD"],
+    "Ejecutivo de trafico": ["En transito", "En puerto"],
     "Agente aduanal": ["Liberado"],
 }
 
@@ -332,6 +340,8 @@ def cambiar_estatus(id_embarque, nuevo, fecha, comentario, rol, usuario):
         return None, ["El embarque ya esta en el ultimo estatus."], 400
     if nuevo != siguiente:
         return None, ["Solo se puede avanzar al siguiente estatus: " + siguiente + "."], 400
+    if nuevo == datos.ESTATUS[4]:
+        return None, ["La entrega al centro de destribucion se registra desde la pantalla de Recepcion."], 400
     if not rol_puede_asignar(rol, nuevo):
         return None, ["Tu rol no puede asignar el estatus " + nuevo + "."], 403
 
@@ -530,3 +540,127 @@ def eliminar_embarque(id_embarque):
         traceback.print_exc()
         return["No se pudo eliminar el embarque de la base de datos."], 500
     return [], 200
+
+# Recepcion en el centro de distribucion
+def _estado_recepcion(factura, recibida, danada):
+    if recibida < factura:
+        return "Faltante"
+    if recibida > factura:
+        return "Excedente"
+    if danada > 0:
+        return "Con daños"
+    return "Coincide"
+
+def _entero_valido(valor):
+    return isinstance(valor, int) and not isinstance(valor, bool) and valor >= 0
+
+def obtener_recepcion_completa(id_embarque):
+    embarque = buscar_embarque(id_embarque)
+    if embarque is None:
+        return None
+
+    recepcion = datos.obtener_recepcion(id_embarque)
+    filas = []
+    discrepancias = 0
+
+    for item in embarque["skus"]:
+        producto = _producto(item["sku"])
+        fila = {
+            "sku": item["sku"],
+            "descripcion": producto["descripcion"] if producto else "",
+            "factura": item["factura"],
+            "recibida": None,
+            "danada": None,
+            "diferencia": None,
+            "estado": "",
+        }
+        if recepcion:
+            dato = recepcion["filas"].get(item["sku"], {"recibida": 0, "danada": 0})
+            fila["recibida"] = dato["recibida"]
+            fila["danada"] = dato["danada"]
+            fila["diferencia"] = dato["recibida"] - item["factura"]
+            fila["estado"] = _estado_recepcion(item["factura"], dato["recibida"], dato["danada"])
+            if fila["estado"] != "Coincide":
+                discrepancias += 1
+        filas.append(fila)
+
+    return{
+        "id": embarque["id"],
+        "contenedor": embarque["contenedor"],
+        "estatus": embarque["estatus"],
+        "registrada": recepcion is not None,
+        "fecha": recepcion["fecha"] if recepcion else "",
+        "usuario": recepcion["usuario"] if recepcion else "",
+        "observaciones": recepcion["observaciones"] if recepcion else "",
+        "filas": filas,
+        "discrepancias": discrepancias,
+    }
+
+def registrar_recepcion(id_embarque, recibido, usuario):
+    embarque = buscar_embarque(id_embarque)
+    if embarque is None:
+        return None, ["El embarque no existe."], 404
+    if embarque["estatus"] == datos.ESTATUS[4]:
+        return None, ["La recepcion de este embarque ya fue registrada."], 400
+    if embarque["estatus"] != datos.ESTATUS[3]:
+        return None, ["Solo se puede registrar la recepcion de embarques Liberados."], 400
+
+    recibido = recibido or {}
+    fecha = recibido.get("fecha")
+    observaciones = (recibido.get("observaciones") or "").strip()
+    lista = recibido.get("skus")
+    errores = []
+
+    if not _fecha_valida(fecha):
+        errores.append("La fecha no es valida.")
+    else:
+        historial = datos.listar_historial(id_embarque)
+        minima = historial[-1]["fecha"] if historial else embarque["fecha_salida"]
+        if fecha < minima:
+            errores.append("La fecha no puede ser anterior a " + minima + ".")
+        if fecha > datos.fecha_referencia():
+            errores.append("La fecha no puede ser futura.")
+    if len(observaciones) > 200:
+        errores.append("Las observaciones no pueden pasar de 200 carecteres.")
+    
+    esperados = [i["sku"] for i in embarque["skus"]]
+    filas = []
+    if not isinstance(lista, list) or len(lista) == 0:
+        errores.append("Faltan las cantidades recibidas.")
+    else:
+        vistos = []
+        for item in lista:
+            sku = item.get("sku") if isinstance(item, dict) else None
+            recibida = item.get("recibida") if isinstance(item, dict) else None
+            danada = item.get("danada") if isinstance(item, dict) else None
+
+            if sku not in esperados:
+                errores.append("El SKU " + str(sku) + " no pertenece a este embarque.")
+                continue
+            if sku in vistos:
+                errores.append("El SKU " + sku + " esta repetido.")
+                continue
+            vistos.append(sku)
+
+            if not _entero_valido(recibida) or not _entero_valido(danada):
+                errores.append("Cantidades invalidas en " + sku + ".")
+            elif danada > recibida:
+                errores.append("En " + sku + " las piezas dañadas no pueden superar a las recibidas.")
+            else:
+                filas.append({"sku": sku, "recibida": recibida, "danada": danada})
+
+        for sku in esperados:
+            if sku not in vistos:
+                errores.append("Falta capturar el SKU " + sku + ".")
+
+    if errores:
+        return None, errores, 400
+
+    try:
+        id_usuario = datos.obtener_id_usuario(usuario)
+        datos.guardar_recepcion(id_embarque, fecha, id_usuario, observaciones, filas)
+    except Exception:
+        traceback.print_exc()
+        return None, ["No se pudo guardar la recepcion en la base de datos."], 500
+
+    return {"id": id_embarque}, [], 200

@@ -75,6 +75,17 @@ async function cargarEmbarques() {
             }))
         }
 
+        if(e.puede_recibir){
+            acciones.appendChild(crearBoton("Registrar recepción", "boton-principal", function(){
+                window.location.href = "/recepcion?embarque=" + encodeURIComponent(e.id)
+            }))
+        }
+        if(e.recepcionado){
+            acciones.appendChild(crearBoton("Ver recepción", "boton-claro", function(){
+                window.location.href = "/recepcion?embarque=" + encodeURIComponent(e.id)
+            }))
+        }
+
         tr.appendChild(acciones)
         cuerpoTabla.appendChild(tr)
     })
