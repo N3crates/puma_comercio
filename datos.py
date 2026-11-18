@@ -63,10 +63,14 @@ COSTO_DEMORA_DIA = _numero(_PARAMETROS["costo_demora_dia"]["valor_num"])
 
 # Usuarios
 def obtener_usuario(usuario):
-    filas = _consultar(
-        "SELECT u.nombre, u.usuario, u.password_hash, r.nombre AS rol FROM usuarios u JOIN roles r ON r.id_rol = u.id_rol WHERE LOWER(u.usuario) = %s", (usuario.lower(),)
-    )
-    return filas[0] if filas else None
+    sql = "SELECT u.nombre, u.usuario, u.password_hash, r.nombre AS rol, u.activo FROM usuarios u JOIN roles r ON r.id_rol = u.id_rol WHERE LOWER(u.usuario) = %s"
+    filas = _consultar(sql, ((usuario or "").lower(),))
+    if not filas:
+        return None
+
+    persona = filas[0]
+    persona["activo"] = bool(persona["activo"])
+    return persona
 
 # Embarques 
 _SQL_EMBARQUES = (
@@ -273,6 +277,74 @@ def guardar_recepcion(id_embarque, fecha, id_usuario, observaciones, filas):
         cur.execute("UPDATE embarques SET estatus = %s WHERE id_embarque = %s", (ESTATUS[4], id_embarque))
         sql_hist = "INSERT INTO historial_estatus (id_embarque, estatus, fecha_cambio, id_usuario, comentario) VALUES (%s, %s, %s, %s, %s)"
         cur.execute(sql_hist, (id_embarque, ESTATUS[4], fecha, id_usuario, "Recepcion registrada en el CD"))
+        conexion.commit()
+    except Exception:
+        conexion.rollback()
+        raise
+    finally:
+        cur.close()
+        conexion.close()
+
+# Gestion de usuarios
+def listar_usuarios():
+    sql = "SELECT u.id_usuario, u.nombre, u.usuario, r.nombre AS rol, u.activo FROM usuarios u JOIN roles r ON r.id_rol = u.id_rol ORDER BY u.id_usuario"
+    return [{"nombre": f["nombre"], "usuario": f["usuario"], "rol": f["rol"], "activo": bool(f["activo"])}
+            for f in _consultar(sql)]
+
+def contar_administradores_activos():
+    sql = "SELECT COUNT(*) AS n FROM usuarios u JOIN roles r ON r.id_rol = u.id_rol WHERE r.nombre = %s AND u.activo = 1"
+    return _consultar(sql, ("Administrador",))[0]["n"]
+
+def _id_rol(cur, nombre_rol):
+    cur.execute("SELECT id_rol FROM roles WHERE nombre = %s", (nombre_rol,))
+    return cur.fetchone()[0]
+
+def crear_usuario(nombre, usuario, password_hash, rol):
+    conexion = _conectar()
+    cur = conexion.cursor()
+    try:
+        sql = "INSERT INTO usuarios (nombre, usuario, password_hash, id_rol, activo) VALUES (%s, %s, %s, %s, 1)"
+        cur.execute(sql, (nombre, usuario, password_hash, _id_rol(cur, rol)))
+        conexion.commit()
+    except Exception:
+        conexion.rollback()
+        raise
+    finally:
+        cur.close()
+        conexion.close()
+
+def actualizar_usuario(usuario, nombre, rol):
+    conexion = _conectar()
+    cur = conexion.cursor()
+    try:
+        sql = "UPDATE usuarios SET nombre = %s, id_rol = %s WHERE LOWER(usuario) = %s"
+        cur.execute(sql, (nombre, _id_rol(cur, rol), usuario.lower()))
+        conexion.commit()
+    except Exception:
+        conexion.rollback()
+        raise
+    finally:
+        cur.close()
+        conexion.close()
+
+def actualizar_password(usuario, password_hash):
+    conexion = _conectar()
+    cur = conexion.cursor()
+    try:
+        cur.execute("UPDATE usuarios SET password_hash = %s WHERE LOWER(usuario) = %s", (password_hash, usuario.lower()))
+        conexion.commit()
+    except Exception:
+        conexion.rollback()
+        raise
+    finally:
+        cur.close()
+        conexion.close()
+
+def cambiar_estado_usuario(usuario, activo):
+    conexion = _conectar()
+    cur = conexion.cursor()
+    try:
+        cur.execute("UPDATE usuarios SET activo = %s WHERE LOWER(usuario) = %s", (1 if activo else 0, usuario.lower()))
         conexion.commit()
     except Exception:
         conexion.rollback()
