@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block titulo %}Usuarios{% endblock %}
+
+{% block contenido %}
+    <h2>Gestión de usuarios</h2>
+    <p>Crea usuarios, cambia su nombre o rol, asigna una contraseña nueva y desactiva o reactiva acceso.</p>
+    <form id="form-alta" class="panel panel-ancho">
+        <h3>Nuevo usuario</h3>
+        <div class="rejilla">
+            <div>
+                <label for="alta-nombre">Nombre completo</label>
+                <input type="text" id="alta-nombre" maxlength="80">
+            </div>
+            <div>
+                <label for="alta-usuario">Usuario</label>
+                <input type="text" id="alta-usuario" maxlength="30" autocomplete="off">
+            </div>
+            <div>
+                <label for="alta-password">Contraseña (minimo 8 caracteres)</label>
+                <input type="password" id="alta-password" autocomplete="new-password">
+            </div>
+            <div>
+                <label for="alta-rol">Rol</label>
+                <select id="alta-rol"></select>
+            </div>
+        </div>
+        <div class="acciones">
+            <button type="submit" class="boton boton-principal">Agregar usuario</button>
+            <button type="button" id="boton-limpiar-alta" class="boton boton-claro">Limpiar</button>
+        </div>
+    </form>
+    <div id="panel-editar" class="panel panel-ancho oculto">
+        <h3 id="titulo-editar"></h3>
+        <div class="rejilla">
+            <div>
+                <label for="editar-nombre">Nombre completo</label>
+                <input type="text" id="editar-nombre" maxlength="80">
+            </div>
+            <div>
+                <label for="editar-rol">Rol</label>
+                <select id="editar-rol"></select>
+            </div>
+        </div>
+        <div class="acciones">
+            <button type="button" id="boton-guardar-editar" class="boton boton-principal">Guardar cambios</button>
+            <button type="button" id="boton-cancelar-editar" class="boton boton-claro">Cancelar</button>
+        </div>
+    </div>
+    <div id="panel-password" class="panel panel-ancho oculto">
+        <h3 id="titulo-password"></h3>
+        <div class="rejilla">
+            <div>
+                <label for="password-nueva">Contraseña nueva (minimo 8 caracteres)</label>
+                <input type="password" id="password-nueva" autocomplete="new-password">
+            </div>
+        </div>
+        <div class="acciones">
+            <button type="button" id="boton-guardar-password" class="boton boton-principal">Cambiar contraseña</button>
+            <button type="button" id="boton-cancelar-password" class="boton boton-claro">Cancelar</button>
+        </div>
+    </div>
+    <h3>Usuarios registrados</h3>
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Usuario</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpo-usuarios"></tbody>
+        </table>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/usuarios.js') }}"></script>
+{% endblock %}

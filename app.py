@@ -292,7 +292,7 @@ def api_registrar_recepcion(id_embarque):
     return jsonify({"ok": True, "mensajes": ["Recepción de " + id_embarque + " registrada. El embarque quedo en Entregado en CD."]}), 200
 
 # Gestion de usuarios
-@app.route("/api/usuarios", method=["GET"])
+@app.route("/api/usuarios", methods=["GET"])
 @rol_requerido()
 def api_listar_usuarios():
     return jsonify({"ok": True, "usuarios": datos.listar_usuarios(), "roles": datos.ROLES, "actual": session["usuario"]}), 200
@@ -306,7 +306,7 @@ def api_crear_usuario():
 
     return jsonify({"ok": True, "mensajes": ["Usuario " + resultado["usuario"] + " creado correctamente."]}), 201
 
-@app.route("/api/usuarios/<usuarios>", methods=["PUT"])
+@app.route("/api/usuarios/<usuario>", methods=["PUT"])
 @rol_requerido()
 def api_editar_usuario(usuario):
     resultado, errores, codigo = logica.editar_usuario(usuario, request.get_json(silent=True) or {}, session["usuario"])
@@ -334,6 +334,11 @@ def api_estado_usuario(usuario):
 
     texto = "activo" if resultado["activo"] else "desactivo"
     return jsonify({"ok": True, "mensajes": ["Usuario " + resultado["usuario"] + " " + texto + "."]}), 200
+
+@app.route("/usuarios")
+@rol_requerido()
+def usuarios():
+    return render_template("usuarios.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
