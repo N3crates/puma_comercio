@@ -287,3 +287,12 @@ button.boton:hover{
     color: #999999;
     background: var(--gris-claro);
 }
+
+/* Recepciones */
+.estado-danos{
+    color: var(--amarillo);
+}
+
+td input[type="number"]{
+    min-width: 70px;
+}

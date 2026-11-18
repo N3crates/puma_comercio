@@ -113,8 +113,12 @@ def api_embarques():
             continue
         item = dict(e)
         item["siguiente"] = logica.siguiente_estatus(e["estatus"])
-        item["puede_cambiar"] = bool(item["siguiente"]) and logica.rol_puede_asignar(session["rol"], item["siguiente"])
+        item["puede_cambiar"] = bool(item["siguiente"]) and item["siguiente"] != datos.ESTATUS[4] and logica.rol_puede_asignar(session["rol"], item["siguiente"])
+        item["puede_recibir"] = session["rol"] in ("Personal de CD", "Administrador") and e["estatus"] == datos.ESTATUS[3]
+        item["recepcionado"] = e["estatus"] == datos.ESTATUS[4]
         item["puede_rastrear"] = session["rol"] in ("Ejecutivo de trafico", "Agente aduanal", "Administrador")
+        item["puede_editar"] = session["rol"] in ("Ejecutivo de trafico", "Administrador") and e["estatus"] in datos.ESTATUS[:3]
+        item["puede_eliminar"] = session["rol"] == "Administrador" and e["estatus"] == datos.ESTATUS[0]
         resultado.append(item)
 
     return jsonify({"ok": True, "embarques": resultado}), 200
@@ -215,6 +219,63 @@ def api_fecha_rastreo(contenedor):
     if ficha is None:
         return jsonify({"ok": False, "mensajes": ["El contenedor no existe."]}),404
     return jsonify({"ok": True, "ficha": ficha}), 200
+
+# Edicion y Eliminacion de Embarques
+@app.route("/editar/<id_embarque>")
+@rol_requerido("Ejecutivo de trafico")
+def editar(id_embarque):
+    return render_template("editar.html", id_embarque=id_embarque, puertos=datos.PUERTOS)
+
+@app.route("/api/embarques/<id_embarque>", methods=["GET"])
+@rol_requerido("Ejecutivo de trafico")
+def api_obtener_embarque(id_embarque):
+    embarque = logica.buscar_embarque(id_embarque)
+    if embarque is None:
+        return jsonify({"ok": False, "mensajes": ["El embarque no existe"]}), 404
+    if embarque["estatus"] not in datos.ESTATUS[:3]:
+        return jsonify({"ok": False, "mensajes": ["Ya no se puede editar: el embarque esta en " + embarque["estatus"] + "."]}), 400
+    return jsonify({"ok": True, "embarque": embarque}), 200
+
+@app.route("/api/embarques/<id_embarque>", methods=["PUT"])
+@rol_requerido("Ejecutivo de trafico")
+def api_editar_embarque(id_embarque):
+    recibido = request.get_json(silent=True) or {}
+    resultado, errores, codigo = logica.editar_embarque(id_embarque, recibido)
+    if errores:
+        return jsonify({"ok": False, "mensajes": errores}), codigo
+    return jsonify({"ok": True, "mensajes": ["Embarque " + id_embarque + " actualizado correctamente."]}), 200
+
+@app.route("/api/embarques/<id_embarque>", methods=["DELETE"])
+@rol_requerido()
+def api_eliminar_embarque(id_embarque):
+    errores, codigo = logica.eliminar_embarque(id_embarque)
+    if errores:
+        return jsonify({"ok": False, "mensajes": errores}), codigo
+    return jsonify({"ok": True, "mensajes": ["Embarque " + id_embarque + " eliminado"]}), 200
+
+# Recepcion en el centro de distribucion
+@app.route("/recepcion")
+@rol_requerido(*datos.ROLES)
+def recepcion():
+    return render_template("recepcion.html")
+
+@app.route("/api/recepcion/<id_embarque>", methods=["GET"])
+@rol_requerido(*datos.ROLES)
+def api_ver_recepcion(id_embarque):
+    r = logica.obtener_recepcion_completa(id_embarque)
+    if r is None:
+        return jsonify({"ok": False, "mensajes": ["El embarque no existe."]}), 404
+    puede = session["rol"] in ("Personal de CD", "Administrador") and not r["registrada"] and r["estatus"] == datos.ESTATUS[3]
+    return jsonify({"ok": True, "recepcion": r, "puede_registrar": puede}), 200
+
+@app.route("/api/recepcion/<id_embarque>", methods=["POST"])
+@rol_requerido("Personal de CD")
+def api_registrar_recepcion(id_embarque):
+    recibido = request.get_json(silent=True) or {}
+    resultado, errores, codigo = logica.registrar_recepcion(id_embarque, recibido, session["usuario"])
+    if errores:
+        return jsonify({"ok": False, "mensajes": errores}), codigo
+    return jsonify({"ok": True, "mensajes": ["Recepción de " + id_embarque + " registrada. El embarque quedo en Entregado en CD."]}), 200
 
 if __name__ == "__main__":
     app.run(debug=True)

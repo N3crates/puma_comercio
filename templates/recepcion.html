@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block titulo %}Recepcion{% endblock %}
+
+{% block contenido %}
+    <h2>Recepción en el centro de distribución</h2>
+    <p>Compara lo recibido con lo facturado. Al guardar, el embarque pasa a Entregado en CD.</p>
+    <div class="panel">
+        <label for="selector-embarque">Embarque (Liberados y entregados)</label>
+        <select id="selector-embarque"></select>
+        <button type="button" id="boton-cargar" class="boton boton-principal boton-ancho">Cargar</button>
+    </div>
+    <div id="zona-recepcion" class="oculto">
+        <h3 id="titulo-recepcion"></h3>
+        <p id="info-recepcion" class="nota-eta"></p>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>SKU</th>
+                        <th>Descripción</th>
+                        <th>Facturada</th>
+                        <th>Recibida</th>
+                        <th>Dañada</th>
+                        <th>Diferencia</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpo-recepcion"></tbody>
+            </table>
+        </div>
+        <div id="formulario-recepcion" class="oculto">
+            <div class="rejilla">
+                <div>
+                    <label for="recepcion-fecha">Fecha de recepción</label>
+                    <input type="date" id="recepcion-fecha">
+                </div>
+                <div>
+                    <label for="recepcion-observaciones">Observaciones (opcional)</label>
+                    <input type="text" id="recepcion-observaciones" maxlength="200">
+                </div>
+            </div>
+            <div class="acciones">
+                <button type="button" id="boton-guardar-recepcion" class="boton boton-principal">Registrar recepción</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/recepcion.js')}}"></script>
+{% endblock %}

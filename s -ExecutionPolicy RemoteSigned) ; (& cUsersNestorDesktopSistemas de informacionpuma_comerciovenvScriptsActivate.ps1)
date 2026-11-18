@@ -1,0 +1,58 @@
+*   [33mfcc925a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdevelop[m[33m, [m[1;31morigin/develop[m[33m)[m integrar rastreo en develop
+[31m|[m[32m\[m  
+[31m|[m * [33mcc8e0bb[m[33m ([m[1;31morigin/feature/rastreo[m[33m, [m[1;32mfeature/rastreo[m[33m)[m Agregar rastreo por contenedor y SKU con linea de tiempo
+[31m|[m[31m/[m  
+*   [33mfeb8898[m integra cambio de estatus e historial
+[33m|[m[34m\[m  
+[33m|[m * [33m55cf701[m[33m ([m[1;31morigin/feature/estatus-historial[m[33m, [m[1;32mfeature/estatus-historial[m[33m)[m agrega cambio con historial y fecha real
+[33m|[m[33m/[m  
+[33m|[m *   [33m7559838[m[33m ([m[1;33mtag: [m[1;33mv1.1[m[33m, [m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m)[m release: versión 1.1 con MySQL
+[33m|[m [35m|[m[33m\[m  
+[33m|[m [35m|[m[33m/[m  
+[33m|[m[33m/[m[35m|[m   
+* [35m|[m   [33mc470fa0[m merge: integra la conexión a MySQL en develop
+[1;31m|[m[1;32m\[m [35m\[m  
+[1;31m|[m * [35m|[m [33m6ca62f0[m[33m ([m[1;31morigin/feature/conexion-mysql[m[33m, [m[1;32mfeature/conexion-mysql[m[33m)[m docs: actualiza app y datos con la conexion a MySQL
+[1;31m|[m * [35m|[m [33m688dbe2[m docs: actualiza README con la conexión a MySQL
+[1;31m|[m * [35m|[m [33m2d34b14[m logiva.py usa la capa de datos de MySQL
+[1;31m|[m * [35m|[m [33m5954aca[m datos.py pasa a ser la capa de acceso a MySQL
+[1;31m|[m * [35m|[m [33m471cf4e[m agrega script de carga de datos iniciales en MySQL
+[1;31m|[m * [35m|[m [33m11198ab[m  agrega configuración de base de datos (plantilla) y protege credenciales
+[1;31m|[m * [35m|[m [33m7f0378f[m agrega conector mysql-connector-python
+[1;31m|[m[1;31m/[m [35m/[m  
+* [35m|[m   [33m57737a4[m Integra base de datos MySQL en develop
+[1;33m|[m[1;34m\[m [35m\[m  
+[1;33m|[m * [35m|[m [33m1fb0fa5[m[33m ([m[1;31morigin/feature/base-datos[m[33m, [m[1;32mfeature/base-datos[m[33m)[m feat: agrega script SQL con la estructura de la base de datos
+[1;33m|[m[1;33m/[m [35m/[m  
+[1;33m|[m *   [33m834ac19[m[33m ([m[1;33mtag: [m[1;33mv1.0[m[33m)[m release: versión 1.0 entregable
+[1;33m|[m [1;35m|[m[1;33m\[m  
+[1;33m|[m [1;35m|[m[1;33m/[m  
+[1;33m|[m[1;33m/[m[1;35m|[m   
+* [1;35m|[m   [33m9c06c86[m merge: integra cierre en develop
+[31m|[m[32m\[m [1;35m\[m  
+[31m|[m * [1;35m|[m [33m664af10[m[33m ([m[1;31morigin/feature/cierre[m[33m, [m[1;32mfeature/cierre[m[33m)[m docs: completa README y ajusta menú para la entrega
+[31m|[m[31m/[m [1;35m/[m  
+* [1;35m|[m   [33mb13c70c[m merge: integra dashboard y embarques en develop
+[33m|[m[34m\[m [1;35m\[m  
+[33m|[m * [1;35m|[m [33m61bb219[m[33m ([m[1;31morigin/feature/dashboard-embarques[m[33m, [m[1;32mfeature/dashboard-embarques[m[33m)[m feat: agrega dashboard con alertas y listado de embarques
+[33m|[m[33m/[m [1;35m/[m  
+* [1;35m|[m   [33mbc71cbf[m merge: integra costeo en develop
+[35m|[m[36m\[m [1;35m\[m  
+[35m|[m * [1;35m|[m [33m350c570[m[33m ([m[1;31morigin/feature/costeo[m[33m, [m[1;32mfeature/costeo[m[33m)[m feat: agrega costeo de importación
+[35m|[m[35m/[m [1;35m/[m  
+* [1;35m|[m   [33mc078a9f[m merge: integra registro y validación de embarques en develop
+[1;31m|[m[1;32m\[m [1;35m\[m  
+[1;31m|[m * [1;35m|[m [33mc786c1c[m[33m ([m[1;31morigin/feature/registro-validacion[m[33m, [m[1;32mfeature/registro-validacion[m[33m)[m feat: agrega pantalla de registro de embarques y corrige validaciones
+[1;31m|[m * [1;35m|[m [33m21dbb37[m feat: agrega pantalla de validación de embarques
+[1;31m|[m * [1;35m|[m [33m402a3f7[m feat: agrega rutas de catálogo, embarques y validación
+[1;31m|[m * [1;35m|[m [33md3de2b0[m feat: agrega validación de embarques y registro en logica.py
+[1;31m|[m[1;31m/[m [1;35m/[m  
+* [1;35m|[m   [33me564c77[m merge: integra base y login en develop
+[1;35m|[m[1;34m\[m [1;35m\[m  
+[1;35m|[m [1;34m|[m[1;35m/[m  
+[1;35m|[m[1;35m/[m[1;34m|[m   
+[1;35m|[m * [33m3a77619[m[33m ([m[1;31morigin/feature/base-y-login[m[33m, [m[1;32mfeature/base-y-login[m[33m)[m fix: corrige errores de login, decorador y roles; agrega plantilla base y login visual
+[1;35m|[m * [33mc81bee8[m feat: agrega servidor Flask, login y control de acceso por rol
+[1;35m|[m * [33m13b7e14[m feat: agregamos datos ficticios (usuarios, catalogo, fracciones y embarques)
+[1;35m|[m[1;35m/[m  
+* [33mccdd2d6[m Chore: Estructura inicial del proyecto

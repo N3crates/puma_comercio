@@ -12,12 +12,13 @@
        El Administrador ve todas, por eso aparece en cada lista. #}
     {% set rol = session.get('rol') %}
     {% set opciones = [
-        ("Dashboard",          "/dashboard", ["Ejecutivo de trafico", "Agente aduanal", "Gerencia / Finanzas", "Administrador"]),
+        ("Dashboard",          "/dashboard", ["Ejecutivo de trafico", "Agente aduanal", "Gerencia / Finanzas", "Personal de CD", "Administrador"]),
         ("Registrar embarque", "/registrar", ["Ejecutivo de trafico", "Administrador"]),
         ("Validacion",         "/validacion", ["Ejecutivo de trafico", "Administrador"]),
         ("Costeo",             "/costeo", ["Agente aduanal", "Gerencia / Finanzas", "Administrador"]),
-        ("Embarques",          "/embarques", ["Ejecutivo de trafico", "Agente aduanal", "Gerencia / Finanzas", "Administrador"]),
+        ("Embarques",          "/embarques", ["Ejecutivo de trafico", "Agente aduanal", "Gerencia / Finanzas", "Personal de CD", "Administrador"]),
         ("Rastreo", "/rastreo", ["Ejecutivo de trafico", "Agente aduanal", "Administrador"]),
+        ("Recepcion", "/recepcion", ["Personal de CD", "Administrador"]),
     ] %}
 
     <header class="encabezado">

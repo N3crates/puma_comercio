@@ -202,3 +202,81 @@ def listar_embarques_sku(sku):
     sql = "SELECT id_embarque, cantidad_pedida, cantidad_facturada FROM detalle_embarque WHERE sku = %s ORDER BY id_embarque"
     return [{"id": f["id_embarque"], "pedido": f["cantidad_pedida"], "factura": f["cantidad_facturada"]}
             for f in _consultar(sql, (sku,))]
+
+# Edicion y eliminacion de embarques
+def actualizar_embarque(id_embarque, cambios):
+    conexion = _conectar()
+    cur = conexion.cursor()
+    try:
+        cur.execute("SELECT id_puerto FROM puertos WHERE nombre = %s", (cambios["puerto_destino"],))
+        id_puerto = cur.fetchone()[0]
+        sql = "UPDATE embarques SET origen = %s, id_puerto = %s, naviera = %s, fecha_salida = %s, eta = %s, flete = %s, honorarios = %s WHERE id_embarque = %s"
+        cur.execute(sql, (cambios["origen"], id_puerto, cambios["naviera"], cambios["fecha_salida"],
+                          cambios["eta"], cambios["flete"], cambios["honorarios"], id_embarque))
+
+        cur.execute("DELETE FROM detalle_embarque WHERE id_embarque = %s", (id_embarque,))
+        sql_detalle = "INSERT INTO detalle_embarque (id_embarque, sku, cantidad_pedida, cantidad_facturada) VALUES (%s, %s, %s, %s)"
+        for item in cambios["skus"]:
+            cur.execute(sql_detalle, (id_embarque, item["sku"], item["pedido"], item["factura"]))
+        conexion.commit()
+    except Exception:
+        conexion.rollback()
+        raise
+    finally:
+        cur.close()
+        conexion.close()
+
+def eliminar_embarque(id_embarque):
+    conexion = _conectar()
+    cur = conexion.cursor()
+    try:
+        cur.execute("DELETE FROM embarques WHERE id_embarque = %s", (id_embarque,))
+        conexion.commit()
+    except Exception:
+        conexion.rollback()
+        raise
+    finally:
+        cur.close()
+        conexion.close()
+
+# Recepcion en el centro de distribucion
+def obtener_recepcion(id_embarque):
+    sql = "SELECT r.id_recepcion, r.fecha_recepcion, r.observaciones, u.nombre AS usuario FROM recepciones r LEFT JOIN usuarios u ON u.id_usuario = r.id_usuario WHERE r.id_embarque = %s"
+    filas = _consultar(sql, (id_embarque,))
+    if not filas:
+        return None
+
+    r = filas[0]
+    detalle = {}
+    sql_detalle = "SELECT sku, cantidad_recibida, cantidad_danada FROM recepcion_detalle WHERE id_recepcion = %s"
+    for d in _consultar(sql_detalle, (r["id_recepcion"],)):
+        detalle[d["sku"]] = {"recibida": d["cantidad_recibida"], "danada": d["cantidad_danada"]}
+
+    return{
+        "fecha": r["fecha_recepcion"].isoformat(),
+        "observaciones": r["observaciones"] or "",
+        "usuario": r["usuario"] or "Sistema",
+        "filas": detalle,
+    }
+
+def guardar_recepcion(id_embarque, fecha, id_usuario, observaciones, filas):
+    conexion = _conectar()
+    cur = conexion.cursor()
+    try:
+        sql_rec = "INSERT INTO recepciones (id_embarque, fecha_recepcion, id_usuario, observaciones) VALUES (%s, %s, %s, %s)"
+        cur.execute(sql_rec, (id_embarque, fecha, id_usuario, observaciones or None))
+        id_recepcion = cur.lastrowid
+        sql_det = "INSERT INTO recepcion_detalle (id_recepcion, sku, cantidad_recibida, cantidad_danada) VALUES (%s, %s, %s, %s)"
+        for f in filas:
+            cur.execute(sql_det, (id_recepcion, f["sku"], f["recibida"], f["danada"]))
+
+        cur.execute("UPDATE embarques SET estatus = %s WHERE id_embarque = %s", (ESTATUS[4], id_embarque))
+        sql_hist = "INSERT INTO historial_estatus (id_embarque, estatus, fecha_cambio, id_usuario, comentario) VALUES (%s, %s, %s, %s, %s)"
+        cur.execute(sql_hist, (id_embarque, ESTATUS[4], fecha, id_usuario, "Recepcion registrada en el CD"))
+        conexion.commit()
+    except Exception:
+        conexion.rollback()
+        raise
+    finally:
+        cur.close()
+        conexion.close()

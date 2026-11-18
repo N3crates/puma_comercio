@@ -119,3 +119,68 @@ CREATE TABLE IF NOT EXISTS detalle_embarque(
         ON UPDATE CASCADE
         ON DELETE RESTRICT
 );
+
+CREATE TABLE IF NOT EXISTS historial_estatus(
+	id_historial INT AUTO_INCREMENT,
+    id_embarque VARCHAR(10) NOT NULL,
+    estatus ENUM('En origen', 'En transito', 'En puerto', 'Liberado', 'Entregado en CD') NOT NULL,
+    fecha_cambio DATE NOT NULL,
+    id_usuario INT NULL,
+    comentario VARCHAR(200) NULL,
+    fecha_registro TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_historial),
+    INDEX idx_historial_embarque (id_embarque),
+    CONSTRAINT fk_historial_embarque
+		FOREIGN KEY (id_embarque)
+        REFERENCES embarques (id_embarque)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+	CONSTRAINT fk_historial_usuario
+		FOREIGN KEY (id_usuario)
+        REFERENCES usuarios (id_usuario)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS recepciones(
+	id_recepcion INT AUTO_INCREMENT,
+    id_embarque VARCHAR(10) NOT NULL,
+    fecha_recepcion DATE NOT NULL,
+    id_usuario INT NULL,
+    observaciones VARCHAR(200) NULL,
+    fecha_registro TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE uni_recepcion_embarque (id_embarque),
+    PRIMARY KEY (id_recepcion),
+    CONSTRAINT fk_recepcion_embarque
+		FOREIGN KEY (id_embarque)
+        REFERENCES embarques (id_embarque)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+	CONSTRAINT fk_recepcion_usuario
+		FOREIGN KEY (id_usuario)
+        REFERENCES usuarios (id_usuario)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS recepcion_detalle(
+	id_detalle_rec INT AUTO_INCREMENT,
+    id_recepcion INT NOT NULL,
+    sku VARCHAR(30) NOT NULL,
+    cantidad_recibida INT NOT NULL,
+    cantidad_danada INT NOT NULL DEFAULT 0,
+    PRIMARY KEY (id_detalle_rec),
+    CONSTRAINT chk_recibida CHECK (cantidad_recibida >= 0),
+    CONSTRAINT chk_danada CHECK (cantidad_danada >= 0 AND cantidad_danada <= cantidad_recibida),
+    CONSTRAINT uq_recepcion_sku UNIQUE (id_recepcion, sku),
+    CONSTRAINT fk_recder_recepcion
+		FOREIGN KEY (id_recepcion)
+        REFERENCES recepciones (id_recepcion)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+	CONSTRAINT fk_recdet_producto
+		FOREIGN KEY (sku)
+        REFERENCES productos (sku)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
