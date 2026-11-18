@@ -296,3 +296,23 @@ button.boton:hover{
 td input[type="number"]{
     min-width: 70px;
 }
+
+/* Usuarios */
+.usuario-activo {
+    color: var(--verde);
+    font-weight: 600;
+}
+
+.usuario-inactivo{
+    color: var(--rojo);
+    font-weight: 600;
+}
+
+.fila-inactiva td{
+    background: #f7f7f7;
+    color: #888888;
+}
+
+.fila-inactiva td.usuario-inactivo{
+    color: var(--rojo);
+}

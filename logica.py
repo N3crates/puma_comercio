@@ -1,10 +1,11 @@
 # Reglas y calculos
 
 from datetime import datetime
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 import traceback
 import datos
+import re
 
 # Verificar usuario y contraseña
 def verificar_credenciales(usuario, password):
@@ -19,6 +20,8 @@ def verificar_credenciales(usuario, password):
         return None
 
     if check_password_hash(persona["password_hash"], password):
+        if not persona["activo"]:
+            return None
         return persona
 
     return None
@@ -664,3 +667,112 @@ def registrar_recepcion(id_embarque, recibido, usuario):
         return None, ["No se pudo guardar la recepcion en la base de datos."], 500
 
     return {"id": id_embarque}, [], 200
+
+# Gestion de Usuarios
+PATRON_USUARIO = re.compile(r"^[A-Za-z0-p_]{3,30}$")
+
+def _texto(valor):
+    return valor.strip() if isinstance(valor, str) else ""
+
+def _errores_password(password):
+    if not isinstance(password, str) or len(password) < 8:
+        return["La contraseña debe tener al menos 8 caracteres."]
+    if len(password) > 128:
+        return["La contraseña no puede pasar de 128 caracteres."]
+    return []
+
+def _errores_nombre_rol(nombre, rol):
+    errores = []
+    if len(nombre) < 2 or len(nombre) > 80:
+        errores.append("El nombre debe tener entre 2 y 80 caracteres.")
+    if rol not in datos.ROLES:
+        errores.append("El rol no es valido.")
+    return errores
+
+def crear_usuario_nuevo(recibido):
+    recibido = recibido or {}
+    nombre = _texto(recibido.get("nombre"))
+    usuario = _texto(recibido.get("usuario")).lower()
+    password = recibido.get("password")
+    rol = recibido.get("rol")
+    errores = _errores_nombre_rol(nombre, rol)
+    if not PATRON_USUARIO.match(usuario):
+        errores.append("El usuario debe tener de 3 a 30 caracteres: letras, numeros o guion bajo.")
+    
+    errores += _errores_password(password)
+    if errores:
+        return None, errores, 400
+    if datos.obtener_usuario(usuario) is not None:
+        return None, ["El usuario ya existe."], 409
+
+    try:
+        datos.crear_usuario(nombre, usuario, generate_password_hash(password), rol)
+    except Exception:
+        traceback.print_exc()
+        return None, ["No se pudo guardar el usuario en la base de datos."], 500
+    
+    return {"usuario": usuario}, [], 201
+
+def editar_usuario(objetivo, recibido, usuario_sesion):
+    persona = datos.obtener_usuario(objetivo)
+    if persona is None:
+        return None, ["El usuario no existe"], 404
+
+    recibido = recibido or {}
+    nombre = _texto(recibido.get("nombre"))
+    rol = recibido.get("rol")
+    errores = _errores_nombre_rol(nombre, rol)
+    if errores:
+        return None, errores, 400
+
+    quita_admin = persona["rol"] == "Administrador" and rol != "Administrador"
+    if quita_admin:
+        if persona["usuario"].lower() == (usuario_sesion or "").lower():
+            return None, ["No puedes quitarte tu propio rol de Administrador."], 400
+        if persona["activo"] and datos.contar_administradores_activos() <= 1:
+            return None, ["Debe quedar al menos un administrador activo."], 400
+
+    try:
+        datos.actualizar_usuario(objetivo, nombre, rol)
+    except Exception:
+        traceback.print_exc()
+        return None, ["No se pudo guardar el cambio en la base de datos."], 500
+
+    return {"usuario": persona["usuario"]}, [], 200
+
+def cambiar_password(objetivo, recibido):
+    if datos.obtener_usuario(objetivo) is None:
+        return None, ["El usuario no existe."], 404
+
+    password = (recibido or {}).get("password")
+    errores = _errores_password(password)
+    if errores:
+        return None, errores, 400
+
+    try:
+        datos.actualizar_password(objetivo, generate_password_hash(password))
+    except Exception:
+        traceback.print_exc()
+        return None, ["No se pudo guardar la contraseña en la base de datos."], 500
+
+    return {"usuario": objetivo}, [], 200
+
+def cambiar_estado(objetivo, activo, usuario_session):
+    persona = datos.obtener_usuario(objetivo)
+    if persona is None:
+        return None, ["El usuario no existe."], 404
+    if not isinstance(activo, bool):
+        return None, ["El estado no es valido."], 400
+    if not activo:
+        if persona["usuario"].lower() == (usuario_session or "").lower():
+            return None, ["No puedes desactivar tu propio usuario."], 400
+        if persona["rol"] == "Administrador" and persona["activo"] and datos.contar_administradores_activos() <= 1:
+            return None, ["Debe quedar al menos un administrador activo."], 400
+
+    try:
+        datos.cambiar_estado_usuario(objetivo, activo)
+    except Exception:
+        traceback.print_exc()
+        return None, ["No se pudo guardar el cambio en la base de datos."], 500
+
+    return {"usuario": persona["usuario"], "activo": activo}, [], 200

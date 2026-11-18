@@ -10,6 +10,20 @@ app = Flask(__name__)
 
 app.secret_key = "clave-secreta-simulacion-puma"
 
+@app.before_request
+def revisar_session():
+    if request.endpoint is None or request.endpoint == "static":
+        return
+    if "usuario" in session:
+        persona = datos.obtener_usuario(session["usuario"])
+        if persona is None or not persona["activo"]:
+            session.clear()
+            if request.path.startswith("/api/"):
+                return jsonify({"ok": False, "mensajes": ["Tu sesión ya no es valida. Inicia sesión de nuevo."]}), 401    
+            return redirect(url_for("login"))
+        session["rol"] = persona["rol"]
+        session["nombre"] = persona["nombre"]
+
 # Control de acceso
 def rol_requerido(*roles_permetidos):
     def decorador(funcion):
@@ -276,6 +290,55 @@ def api_registrar_recepcion(id_embarque):
     if errores:
         return jsonify({"ok": False, "mensajes": errores}), codigo
     return jsonify({"ok": True, "mensajes": ["Recepción de " + id_embarque + " registrada. El embarque quedo en Entregado en CD."]}), 200
+
+# Gestion de usuarios
+@app.route("/api/usuarios", methods=["GET"])
+@rol_requerido()
+def api_listar_usuarios():
+    return jsonify({"ok": True, "usuarios": datos.listar_usuarios(), "roles": datos.ROLES, "actual": session["usuario"]}), 200
+
+@app.route("/api/usuarios", methods=["POST"])
+@rol_requerido()
+def api_crear_usuario():
+    resultado, errores, codigo = logica.crear_usuario_nuevo(request.get_json(silent=True) or {})
+    if errores:
+        return jsonify({"ok": False, "mensajes": errores}), codigo
+
+    return jsonify({"ok": True, "mensajes": ["Usuario " + resultado["usuario"] + " creado correctamente."]}), 201
+
+@app.route("/api/usuarios/<usuario>", methods=["PUT"])
+@rol_requerido()
+def api_editar_usuario(usuario):
+    resultado, errores, codigo = logica.editar_usuario(usuario, request.get_json(silent=True) or {}, session["usuario"])
+    if errores:
+        return jsonify({"ok": False, "mensajes": errores}), codigo
+
+    return jsonify({"ok": True, "mensajes": ["Usuario " + resultado["usuario"] + " actualizado."]}), 200
+
+@app.route("/api/usuarios/<usuario>/password", methods=["POST"])
+@rol_requerido()
+def api_password_usuario(usuario):
+    resultado, errores, codigo = logica.cambiar_password(usuario, request.get_json(silent=True) or {})
+    if errores:
+        return jsonify({"ok": False, "mensajes": errores}), codigo
+
+    return jsonify({"ok": True, "mensajes": ["Contraseña de " + usuario + " actualizada."]}), 200
+
+@app.route("/api/usuarios/<usuario>/estado", methods=["POST"])
+@rol_requerido()
+def api_estado_usuario(usuario):
+    recibido = request.get_json(silent=True) or {}
+    resultado, errores, codigo = logica.cambiar_estado(usuario, recibido.get("activo"), session["usuario"])
+    if errores:
+        return jsonify({"ok": False, "mensajes": errores}), codigo
+
+    texto = "activo" if resultado["activo"] else "desactivo"
+    return jsonify({"ok": True, "mensajes": ["Usuario " + resultado["usuario"] + " " + texto + "."]}), 200
+
+@app.route("/usuarios")
+@rol_requerido()
+def usuarios():
+    return render_template("usuarios.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
